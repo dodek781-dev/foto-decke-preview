@@ -1,0 +1,109 @@
+/* Render-Area: Decken-Frame in Quer-/Hochformat. V1 ohne Raum-Mockup,
+ * nur ein simpler Decken-Rahmen mit Foto. */
+
+.render-area {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  height: 100%;
+  background: #f4f2ed;
+  padding: 20px;
+  overflow: hidden;
+}
+
+/* Decken-Frame — Aspect-Ratio kommt aus orientation-Data-Attribute.
+ * Stoff-Optik: leicht gewellte Kontur (mask-image SVG-Wave) statt
+ * scharfkantig rechteckig. Drop-Shadow wird via filter: drop-shadow()
+ * gesetzt, damit der Schatten der gewellten Kontur folgt (box-shadow
+ * würde am unsichtbaren Rechteck dahinter haften). */
+.blanket-frame {
+  --blanket-base: min(70vh, 600px);
+  --blanket-ratio: 1.4286;     /* default: landscape (Querformat) */
+  position: relative;
+  width: var(--blanket-base);
+  height: calc(var(--blanket-base) / var(--blanket-ratio));
+  max-width: 90vw;
+  max-height: 80vh;
+  background: #fafaf8;
+  /* Wellen-Maske: SVG-Path mit weichen Bezier-Wellen auf allen 4 Seiten,
+   * preserveAspectRatio=none -> stretcht mit dem Frame mit. */
+  -webkit-mask-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 120' preserveAspectRatio='none'><path d='M3,5 Q10,1 20,5 T40,5 T60,5 T80,5 T100,5 T120,5 T140,5 T160,5 T180,5 T197,5 Q199,30 197,60 T197,115 Q190,119 180,115 T160,115 T140,115 T120,115 T100,115 T80,115 T60,115 T40,115 T20,115 T3,115 Q1,90 3,60 T3,5 Z' fill='black'/></svg>");
+          mask-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 120' preserveAspectRatio='none'><path d='M3,5 Q10,1 20,5 T40,5 T60,5 T80,5 T100,5 T120,5 T140,5 T160,5 T180,5 T197,5 Q199,30 197,60 T197,115 Q190,119 180,115 T160,115 T140,115 T120,115 T100,115 T80,115 T60,115 T40,115 T20,115 T3,115 Q1,90 3,60 T3,5 Z' fill='black'/></svg>");
+  -webkit-mask-size: 100% 100%;
+          mask-size: 100% 100%;
+  -webkit-mask-repeat: no-repeat;
+          mask-repeat: no-repeat;
+  filter:
+    drop-shadow(0 14px 28px rgba(0, 0, 0, 0.18))
+    drop-shadow(0 4px 10px rgba(0, 0, 0, 0.10));
+}
+
+/* Hochformat: Frame um 90° flippen → Aspect-Ratio invertieren. */
+.render-area[data-orientation="portrait"] .blanket-frame {
+  --blanket-ratio: 0.7;
+  width: calc(var(--blanket-base) * var(--blanket-ratio));
+  height: var(--blanket-base);
+  max-width: 60vw;
+}
+
+/* Foto: füllt den Frame komplett (Full-Bleed wie Merchone empfiehlt).
+ * Liegt INNERHALB der mask-image Wave — wird also automatisch mitgewellt. */
+.blanket-photo {
+  position: absolute;
+  inset: 0;
+  background: #ddd;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.blanket-photo img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.blanket-photo__placeholder {
+  color: #888;
+  font-size: 13px;
+  font-family: 'Outfit', system-ui, sans-serif;
+  letter-spacing: 0.02em;
+  padding: 0 24px;
+  text-align: center;
+}
+
+/* Variante (Standard/Premium): subtile Material-Andeutung — Premium ein
+ * Hauch wärmerer/dunklerer Frame-Hintergrund mit leichter Textur. */
+.render-area[data-variant="premium"] .blanket-frame {
+  background: #f3eee2;
+  box-shadow:
+    0 16px 48px rgba(0, 0, 0, 0.20),
+    0 4px 12px rgba(0, 0, 0, 0.10);
+}
+
+/* =====================================================================
+ * Mobile-Overrides — MUESSEN am Ende der Datei stehen.
+ * @media aendert die Spezifitaet NICHT, deshalb muessen Mobile-Regeln
+ * NACH den Desktop-Defaults kommen, sonst werden sie ueberschrieben.
+ * ===================================================================== */
+@media (max-width: 900px) {
+  .render-area {
+    min-height: auto;
+    height: auto;
+    align-items: flex-start;
+    overflow: visible;
+    padding: 24px 12px 60px;
+  }
+  .blanket-frame {
+    --blanket-base: min(50vh, 420px);
+    max-width: 92vw;
+    width:  min(var(--blanket-base), 92vw);
+    height: calc(min(var(--blanket-base), 92vw) / var(--blanket-ratio));
+  }
+  .render-area[data-orientation="portrait"] .blanket-frame {
+    width:  min(calc(var(--blanket-base) * var(--blanket-ratio)), 70vw);
+    height: calc(min(calc(var(--blanket-base) * var(--blanket-ratio)), 70vw) / var(--blanket-ratio));
+    max-width: 70vw;
+  }
+}

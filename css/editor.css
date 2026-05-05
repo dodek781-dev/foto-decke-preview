@@ -1,0 +1,1501 @@
+/* =====================================================================
+ * Editor — 1:1 Port der Distantlines Stadt-/Stern-/Foto-Editor-UI
+ * =====================================================================
+ * Quelle: distantlines/assets/starmap.css (.main__switcher, .elem__picker)
+ *         distantlines/assets/photo.css   (foto/text/format__wrapper)
+ * Render-Area bleibt unberuehrt — siehe css/render.css.
+ * ===================================================================== */
+
+/* ---------------------------------------------------------------------
+ * .main__switcher — die Editor-Card. Hintergrund weiss, linke Border,
+ * Outfit-Font fuer alle UI-Elemente (Render-Area nutzt weiterhin Satoshi
+ * via render.css).
+ * -------------------------------------------------------------------*/
+.main__switcher {
+  max-width: 445px;
+  width: 100%;
+  background-color: #fff;
+  border-left: 1px solid rgba(0, 0, 0, 0.15);
+  height: 100%;               /* Desktop: fuellt 100vh-Spalte vom .app-Grid */
+  overflow-y: auto;            /* Inhalt scrollt INNERHALB des Editors */
+  overflow-x: hidden;
+  display: flex;
+  flex-direction: column;
+  font-family: 'Outfit', Helvetica, Arial, sans-serif;
+  color: #16212c;
+}
+
+/* Tabs sticky am oberen Rand waehrend Editor-Content scrollt */
+.main__switcher > ul {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+/* ---------------------------------------------------------------------
+ * Tab-Navigation — Flex-Row, gleichbreite Tabs, Icon ueber Label.
+ * Active-State: weisser BG + schwarzer Bottom-Border via :before.
+ * 1:1 starmap.css:560-573 (Live-DevTools-Computed verifiziert):
+ *   ul: padding 0, margin 0, kein gap; li: width 100%; a: padding 6px 4px
+ * Visueller "Gap" zwischen Tabs entsteht durch Sub-Pixel-Rendering
+ * am Active/Inactive-Farbuebergang, kein expliziter CSS-Wert.
+ * -------------------------------------------------------------------*/
+.main__switcher > ul {
+  padding: 0;
+  list-style-type: none;
+  margin: 0;
+  display: flex;
+  background-color: #F7F7F8;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.main__switcher > ul > li {
+  width: 100%;
+}
+
+.main__switcher > ul > li > a {
+  height: 68px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+  flex-direction: column;
+  color: #4f4f4f;
+  font-size: 11px;
+  line-height: 13px;
+  font-weight: 500;
+  transition: 0.3s ease all;
+  position: relative;
+  text-align: center;
+  padding: 6px 4px;
+  box-sizing: border-box;
+  background-color: transparent; /* zeigt ul-bg (grau) durch, Aktive bekommt weiss via .current */
+}
+
+.main__switcher > ul > li > a:hover {
+  background-color: #fff;
+}
+
+.main__switcher > ul > li > a:hover:before {
+  width: 100%;
+}
+
+.main__switcher > ul > li > a:before {
+  content: "";
+  width: 0;
+  height: 2px;
+  bottom: 0;
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  transition: 0.3s ease all;
+  background-color: #000;
+}
+
+.main__switcher > ul > li > a.current {
+  background-color: #fff;
+  color: #000;
+}
+
+.main__switcher > ul > li > a.current:before {
+  width: 100%;
+}
+
+.main__switcher > ul > li > a span {
+  margin-bottom: 4px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.main__switcher > ul > li > a svg {
+  display: block;
+}
+
+.main__switcher > ul > li > a.current svg {
+  stroke: #000;
+}
+
+/* ---------------------------------------------------------------------
+ * Tab-Wrapper Padding — analog zu starmap.css .location__wrapper /
+ * photo.css .foto__wrapper. 15px Einrueckung, weisser BG.
+ * -------------------------------------------------------------------*/
+.layout__wrapper,
+.text__wrapper,
+.produkt__wrapper {
+  padding: 15px;
+  width: 100%;
+  box-sizing: border-box;
+  background-color: #fff;
+}
+
+/* ---------------------------------------------------------------------
+ * .elem__picker — Sektion mit Bottom-Border-Separator, <p> als Heading.
+ * 1:1 aus starmap.css:239.
+ * -------------------------------------------------------------------*/
+.elem__picker {
+  margin-bottom: 32px;       /* Mehr Atemraum zwischen Sektionen (war 20px) */
+  padding-bottom: 28px;      /* (war 15px) */
+  border-bottom: 1px solid #e5e5e5;
+}
+
+.elem__picker:last-child {
+  margin-bottom: 0;
+  padding-bottom: 0;
+  border-bottom: none;
+}
+
+.elem__picker > p {
+  /* 1:1 citymap-ui-improvements.css — überschreibt starmap.css bold/16px/#16212c */
+  margin: 0 0 16px;
+  font-size: 14px;
+  line-height: 1.4;
+  font-weight: 500;
+  color: #333;
+}
+
+/* Platzhalter-Text in den noch leeren Tabs */
+.elem__picker .placeholder {
+  margin: 0;
+  font-size: 13px;
+  color: #aaa;
+  font-style: italic;
+}
+
+/* =====================================================================
+ * T4: Foto-Upload-Zone + Crop-Modal
+ * Pattern aus distantlines/assets/photo.css (Z. 392–869), gekuerzt fuer
+ * Standalone-Preview ohne .photo-customizer-Scope.
+ * ===================================================================== */
+
+/* ---------------------------------------------------------------------
+ * Upload-Dropzone — gestrichelter Rahmen, beiger BG, hover/drag-over.
+ * -------------------------------------------------------------------*/
+.photo-upload-zone {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 28px 20px;
+  border: 2px dashed #c9c4b7;
+  border-radius: 8px;
+  background: #faf8f3;
+  cursor: pointer;
+  transition: border-color 0.2s ease, background 0.2s ease;
+  text-align: center;
+}
+
+.photo-upload-zone:hover,
+.photo-upload-zone.drag-over {
+  border-color: #16212c;
+  background: #f0ede4;
+}
+
+.photo-upload-zone svg {
+  width: 40px;
+  height: 40px;
+  color: #888;
+}
+
+.photo-upload-zone p {
+  margin: 0;
+  color: #333;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.photo-upload-zone .upload-hint {
+  color: #888;
+  font-size: 12px;
+  font-weight: 400;
+}
+
+.photo-upload-zone input[type="file"] {
+  display: none;
+}
+
+/* =====================================================================
+ * Upload-Status (Bild wird hochgeladen…) — 1:1 Port photo.css:photo-upload-status
+ * Plus Progress-Bar darunter
+ * ===================================================================== */
+.photo-upload-status {
+  display: none;
+  margin: 12px 0 0;
+  padding: 10px 12px;
+  border-radius: 6px;
+  font-size: 13px;
+  text-align: center;
+  font-weight: 500;
+}
+.photo-upload-status.is-uploading {
+  display: block;
+  background: #e7f0fe;
+  color: #1d4e89;
+}
+.photo-upload-status.is-error {
+  display: block;
+  background: #fdecea;
+  color: #8b1d1d;
+}
+.photo-upload-status.is-success {
+  display: block;
+  background: #e7f6ea;
+  color: #1b5e20;
+}
+.photo-upload-status .progress-bar {
+  display: block;
+  width: 100%;
+  height: 4px;
+  margin-top: 8px;
+  background: rgba(29, 78, 137, 0.18);
+  border-radius: 2px;
+  overflow: hidden;
+}
+.photo-upload-status .progress-bar-fill {
+  display: block;
+  height: 100%;
+  width: 0%;
+  background: #1d4e89;
+  border-radius: 2px;
+  transition: width 0.15s ease-out;
+}
+
+/* ---------------------------------------------------------------------
+ * "Foto-Name + Buttons"-Zeile (sichtbar nach Upload, JS toggelt .visible).
+ * -------------------------------------------------------------------*/
+.photo-change-row {
+  display: none;
+  align-items: stretch;
+  gap: 8px;
+}
+
+.photo-change-row.visible {
+  display: flex;
+}
+
+.photo-change-row button {
+  flex: 1 1 0;            /* beide Buttons fuellen Platz gleichmaessig */
+  padding: 12px 16px;
+  background-color: transparent;
+  color: #000;
+  border: 1px solid #000;
+  border-radius: 0;
+  cursor: pointer;
+  font-size: 13px;
+  letter-spacing: 0.05em;
+  font-weight: 600;
+  font-family: 'Outfit', Helvetica, Arial, sans-serif;
+  transition: 0.3s ease all;
+}
+
+.photo-change-row button:hover {
+  background-color: #000;
+  color: #fff;
+}
+
+/* =====================================================================
+ * Hauptwort-Style-Buttons (Modern / Elegant / Verspielt) — wechseln nur
+ * die Schriftart vom Hauptwort. Optik 1:1 wie .photo-change-row button.
+ * ===================================================================== */
+.hauptwort-style-row {
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
+}
+.hauptwort-style-btn {
+  flex: 1 1 0;
+  padding: 12px 16px;
+  background-color: transparent;
+  color: #000;
+  border: 1px solid #000;
+  border-radius: 0;
+  cursor: pointer;
+  font-size: 13px;
+  letter-spacing: 0.05em;
+  font-weight: 600;
+  font-family: 'Outfit', Helvetica, Arial, sans-serif;
+  transition: 0.3s ease all;
+}
+.hauptwort-style-btn:hover {
+  background-color: #000;
+  color: #fff;
+}
+.hauptwort-style-btn.current {
+  background-color: #000;
+  color: #fff;
+}
+
+/* ---------------------------------------------------------------------
+ * Crop-Modal-Backdrop + Container.
+ * -------------------------------------------------------------------*/
+.cropper-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(20, 20, 24, 0.92);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+}
+
+.cropper-modal-backdrop.visible {
+  display: flex;
+}
+
+.cropper-modal-backdrop > .photo-crop-modal {
+  background: #fff;
+  border-radius: 10px;
+  padding: 20px;
+  max-width: 640px;
+  width: 92vw;
+  max-height: 92vh;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  font-family: 'Outfit', Helvetica, Arial, sans-serif;
+}
+
+.cropper-modal-backdrop > .photo-crop-modal h3 {
+  margin: 0;
+  font-size: 18px;
+  color: #16212c;
+}
+
+.cropper-modal-backdrop > .photo-crop-modal .cropper-wrapper {
+  flex: 1 1 auto;
+  min-height: 300px;
+  max-height: 60vh;
+  overflow: hidden;
+  background: #ffffff;
+  /* Safari/iOS Flex-Quirk: ohne min-width: 0 kann ein Flex-Item mit
+   * overflow:hidden + grossem <img>-Child auf min-content (Bild-Pixel)
+   * ausdehnen. Cropper.js misst dann offsetWidth zu gross. */
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Cropper-Container explizit zentrieren + weisser BG (1:1 photo.css Z. 770/878).
+ * Cropper.js rendert sonst eine grau-tönende Container-BG die das Foto
+ * insgesamt washed-out aussehen laesst. */
+#photo-cropper-backdrop .cropper-container {
+  margin: 0 auto !important;
+  max-width: 100% !important;
+  background: #ffffff !important;
+}
+
+/* Crop-Box-Markierung 1:1 wie Fotoposter (photo.css Z. 882–922):
+ * weisser Border + dunkler Outline-Kontrast, KEIN Schleier ueber Foto,
+ * Eckpunkte als weisse Quadrate mit dunklem Rand. */
+#photo-cropper-backdrop .cropper-container .cropper-crop-box {
+  border-radius: 0 !important;
+  border: 2px solid #ffffff !important;
+  box-shadow:
+    0 0 0 1px rgba(0, 0, 0, 0.7) !important,
+    0 0 12px rgba(0, 0, 0, 0.35) !important;
+  overflow: visible !important;
+}
+#photo-cropper-backdrop .cropper-container .cropper-view-box {
+  border-radius: 0 !important;
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+/* WICHTIG: Cropper.js Default ist .cropper-face { background:#fff; opacity:0.1 }
+ * — das erzeugt einen 10% weissen Schleier ueber dem Crop-Bereich. Sternkarte
+ * (starmap.css Z. 3701) ueberschreibt das auf transparent. Mein Preview laedt
+ * starmap.css nicht, also brauchen wir's hier explizit. ROOT CAUSE des
+ * 'weißer Filter'-Reports. */
+#photo-cropper-backdrop .cropper-container .cropper-face {
+  background: transparent !important;
+  cursor: move !important;
+}
+
+/* Dim aussserhalb der Crop-Box via cropper-modal (kontrastreicher als Default) */
+#photo-cropper-backdrop .cropper-container .cropper-modal {
+  background: rgba(0, 0, 0, 0.5) !important;
+}
+#photo-cropper-backdrop .cropper-container .cropper-dashed {
+  display: block !important;
+  opacity: 0.6;
+  border-color: rgba(255, 255, 255, 0.7);
+}
+#photo-cropper-backdrop .cropper-container .cropper-line {
+  display: none !important;
+}
+#photo-cropper-backdrop .cropper-container .cropper-center {
+  display: none !important;
+}
+#photo-cropper-backdrop .cropper-container .cropper-point {
+  background-color: #ffffff !important;
+  border: 1.5px solid #16212C !important;
+  width: 12px !important;
+  height: 12px !important;
+  opacity: 1 !important;
+  border-radius: 0 !important;
+}
+
+.cropper-modal-backdrop > .photo-crop-modal .cropper-wrapper img {
+  max-width: 100%;
+  display: block;
+}
+
+.cropper-modal-backdrop > .photo-crop-modal .cropper-help {
+  margin: 0;
+  font-size: 13px;
+  color: #6b6b6b;
+  text-align: center;
+  line-height: 1.4;
+}
+
+.cropper-modal-backdrop > .photo-crop-modal .cropper-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.cropper-modal-backdrop > .photo-crop-modal button {
+  padding: 9px 18px;
+  border-radius: 6px;
+  border: 1px solid #16212c;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  font-family: inherit;
+}
+
+.cropper-modal-backdrop > .photo-crop-modal button.cancel {
+  background: #fff;
+  color: #16212c;
+}
+
+.cropper-modal-backdrop > .photo-crop-modal button.apply {
+  background: #16212c;
+  color: #fff;
+}
+
+/* Passepartout + Orientation + Frame nutzen jetzt das gemeinsame
+ * .elem__picker ul li a Pattern (siehe oben). Keine eigenen Styles mehr. */
+
+/* =====================================================================
+ * Qualitäts-Anzeige Button (1:1 Port photo.css:561-610)
+ * Sichtbar nach Foto-Upload, zeigt Print-Qualität (green/orange/red)
+ * ===================================================================== */
+.photo-quality-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  padding: 12px 16px;
+  margin-top: 12px;
+  background: #e8f5e9;
+  border: 1px solid #c8e6c9;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+  color: #2e7d32;
+  text-align: center;
+  transition: filter 0.15s ease;
+  font-family: 'Outfit', Helvetica, Arial, sans-serif;
+}
+.photo-quality-btn:hover { filter: brightness(0.97); }
+.photo-quality-btn[data-level="green"] {
+  background: #e8f5e9;
+  border-color: #c8e6c9;
+  color: #2e7d32;
+}
+.photo-quality-btn[data-level="orange"] {
+  background: #fff4e1;
+  border-color: #ffd28e;
+  color: #b56814;
+}
+.photo-quality-btn[data-level="red"] {
+  background: #ffebee;
+  border-color: #f4b8bc;
+  color: #b71c1c;
+}
+.photo-quality-btn .quality-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+}
+.photo-quality-btn .quality-label { font-weight: 600; }
+.photo-quality-btn .quality-status { font-weight: 500; }
+
+/* =====================================================================
+ * Bildqualitäts-Modal — 1:1 Port photo.css:612-702
+ * ===================================================================== */
+.quality-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(20, 20, 24, 0.55);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 9998;
+}
+.quality-modal-backdrop.visible { display: flex; }
+.quality-modal-backdrop > .quality-modal {
+  background: #fff;
+  border-radius: 12px;
+  padding: 24px 28px;
+  max-width: 460px;
+  width: 92vw;
+  max-height: 88vh;
+  overflow-y: auto;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.25);
+  font-family: 'Outfit', Helvetica, Arial, sans-serif;
+}
+.quality-modal-backdrop .quality-modal-header {
+  position: relative;
+  margin-bottom: 14px;
+  text-align: center;
+}
+.quality-modal-backdrop .quality-modal-header h3 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+  color: #16212C;
+}
+.quality-modal-backdrop .quality-modal-close {
+  position: absolute;
+  right: -4px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  font-size: 26px;
+  line-height: 1;
+  cursor: pointer;
+  color: #6b6b6b;
+  padding: 0 4px;
+}
+.quality-modal-backdrop .quality-modal-intro {
+  margin: 0 0 16px 0;
+  font-size: 14px;
+  color: #4a4a4a;
+  line-height: 1.5;
+}
+.quality-modal-backdrop .quality-size-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.quality-modal-backdrop .quality-size-list li {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 15px;
+  font-weight: 500;
+  color: #16212C;
+}
+.quality-modal-backdrop .quality-size-list .quality-icon {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+}
+.quality-modal-backdrop .quality-icon[data-level="green"]  { background: #4CAF50; }
+.quality-modal-backdrop .quality-icon[data-level="orange"] { background: #f5a524; }
+.quality-modal-backdrop .quality-icon[data-level="red"]    { background: #e53935; }
+.quality-modal-backdrop .quality-icon svg {
+  width: 14px;
+  height: 14px;
+}
+.quality-modal-backdrop .quality-size-list .quality-dpi {
+  margin-left: auto;
+  font-size: 12px;
+  font-weight: 400;
+  color: #888;
+}
+
+/* =====================================================================
+ * Notice-Modal — gleicher Look wie Quality-Modal, fuer freundliche
+ * Hinweise (z.B. "Bitte Foto hochladen" beim Cart-Klick).
+ * ===================================================================== */
+.notice-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(20, 20, 24, 0.55);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 9998;
+}
+.notice-modal-backdrop.visible { display: flex; }
+.notice-modal-backdrop > .notice-modal {
+  background: #fff;
+  border-radius: 12px;
+  padding: 24px 28px 22px;
+  max-width: 420px;
+  width: 92vw;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.25);
+  font-family: 'Outfit', Helvetica, Arial, sans-serif;
+}
+.notice-modal-backdrop .notice-modal-header {
+  position: relative;
+  margin-bottom: 12px;
+  text-align: center;
+}
+.notice-modal-backdrop .notice-modal-header h3 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+  color: #16212C;
+}
+.notice-modal-backdrop .notice-modal-close {
+  position: absolute;
+  right: -4px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  font-size: 26px;
+  line-height: 1;
+  cursor: pointer;
+  color: #6b6b6b;
+  padding: 0 4px;
+}
+.notice-modal-backdrop .notice-modal-intro {
+  margin: 0 0 18px 0;
+  font-size: 14px;
+  color: #4a4a4a;
+  line-height: 1.55;
+  text-align: center;
+}
+.notice-modal-backdrop .notice-modal-actions {
+  display: flex;
+  justify-content: center;
+}
+.notice-modal-backdrop .notice-modal-cta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 180px;
+  padding: 12px 24px;
+  background: transparent;
+  color: #000;
+  border: 1px solid #000;
+  border-radius: 0;
+  text-decoration: none;
+  font-size: 14px;
+  letter-spacing: 0.05em;
+  font-weight: 600;
+  font-family: 'Outfit', Helvetica, Arial, sans-serif;
+  transition: 0.3s ease all;
+  cursor: pointer;
+}
+.notice-modal-backdrop .notice-modal-cta:hover {
+  background: #000;
+  color: #fff;
+}
+
+/* =====================================================================
+ * T6: Filter-Thumbnails (1:1 Pattern aus photo.css photo-filter-picker)
+ * ===================================================================== */
+.photo-filter-picker { margin-top: 16px; }
+.photo-filter-picker > p {
+  font-size: 14px !important;
+  font-weight: 600;
+  margin: 0 0 8px;
+  color: #16212c;
+  line-height: 1.3 !important;
+}
+.photo-filter-picker .filter-options {
+  list-style: none;
+  margin: 0;
+  padding: 4px 0 8px;
+  display: flex;
+  gap: 10px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  touch-action: pan-x;
+}
+.photo-filter-picker .filter-options::-webkit-scrollbar { height: 4px; }
+.photo-filter-picker .filter-options::-webkit-scrollbar-thumb {
+  background: rgba(0,0,0,0.15);
+  border-radius: 2px;
+}
+.photo-filter-picker .filter-options li { flex: 0 0 auto; }
+.photo-filter-picker .filter-options a {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-decoration: none;
+  color: #555;
+  gap: 4px;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  cursor: pointer;
+}
+.photo-filter-picker .filter-thumb {
+  display: block;
+  width: 64px;
+  height: 64px;
+  border-radius: 4px;
+  overflow: hidden;
+  background: #f0f0f0;
+  border: 2px solid transparent;
+  transition: border-color 0.15s ease;
+}
+.photo-filter-picker .filter-thumb-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.photo-filter-picker .filter-options a.current .filter-thumb {
+  border-color: #16212c;
+}
+.photo-filter-picker .filter-name {
+  font-size: 11px;
+  font-weight: 500;
+  color: #555;
+}
+.photo-filter-picker .filter-options a.current .filter-name {
+  color: #16212c;
+  font-weight: 600;
+}
+
+/* =====================================================================
+ * T7: Text-Tab Inputs (text + textarea)
+ * ===================================================================== */
+.elem__picker input[type="text"],
+.elem__picker textarea {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #d8d4cb;
+  border-radius: 6px;
+  font-size: 14px;
+  font-family: inherit;
+  color: #16212c;
+  background: #fff;
+  resize: vertical;
+  box-sizing: border-box;
+}
+.elem__picker input[type="text"]:focus,
+.elem__picker textarea:focus,
+.elem__picker select:focus {
+  outline: none;
+  border-color: #16212c;
+}
+.elem__picker textarea {
+  line-height: 1.5;
+  resize: none;
+}
+.elem__picker .input-hint {
+  margin: 6px 0 0;
+  font-size: 11px;
+  color: #888;
+}
+
+/* =====================================================================
+ * T9: Inspirations-Slide-in-Panel + Trigger-Link (Pattern Sternkarte)
+ * ===================================================================== */
+.inspirations-link {
+  display: inline-block;
+  text-decoration: underline;
+  text-underline-offset: 4px;
+  color: #16212c;
+  font-size: 16px;
+  line-height: 22px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.inspirations-link:hover {
+  opacity: 0.7;
+}
+
+/* Backdrop dimmt + blurt waehrend Panel offen — Pattern Sternkarte */
+.inspirations-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(20, 20, 24, 0.45);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  z-index: 99;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+}
+.inspirations-backdrop.is-open {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.inspirations-panel {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: min(420px, 100vw);
+  background: #fff;
+  box-shadow: -8px 0 32px rgba(0, 0, 0, 0.18);
+  z-index: 100;
+  transform: translateX(100%);
+  transition: transform 0.3s ease;
+  font-family: 'Outfit', Helvetica, Arial, sans-serif;
+  overflow-y: auto;
+}
+.inspirations-panel.is-open {
+  transform: translateX(0);
+}
+.inspirations-panel__close {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 0;
+  background: #f0ede4;
+  color: #16212c;
+  font-size: 22px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: inherit;
+}
+.inspirations-panel__close:hover {
+  background: #e2dccf;
+}
+.inspirations-panel__content {
+  padding: 28px 24px 24px;
+}
+.inspirations-panel__title {
+  margin: 0 0 6px;
+  font-size: 22px;
+  line-height: 28px;
+  font-weight: 700;
+  color: #1a1a1a;
+}
+.inspirations-panel__subtitle {
+  margin: 0 0 22px;
+  font-size: 14px;
+  color: #828282;
+  line-height: 1.45;
+}
+
+.inspirations__cats {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin: 0 0 18px;
+  padding: 0;
+  list-style: none;
+}
+.inspirations__cats a {
+  display: inline-block;
+  padding: 9px 18px;
+  border-radius: 22px;
+  border: 1px solid #d8d4cb;
+  background: #fff;
+  color: #16212c;
+  font-size: 14px;
+  font-weight: 500;
+  text-decoration: none;
+  cursor: pointer;
+  transition: 0.2s;
+}
+.inspirations__cats a:hover {
+  border-color: #16212c;
+}
+.inspirations__cats a.current {
+  background: #16212c;
+  color: #fff;
+  border-color: #16212c;
+}
+.inspirations__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 8px;
+}
+.inspirations__list li {
+  padding: 0;
+}
+.inspirations__list a {
+  display: block;
+  padding: 14px 18px;
+  border: 1.5px solid #ebebeb;
+  border-radius: 10px;
+  background: #fafafa;
+  text-decoration: none;
+  color: #333;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.inspirations__list a:hover {
+  border-color: #1a1a1a;
+  background: #f5f5f5;
+  transform: translateX(4px);
+}
+.inspirations__list .tpl-title {
+  display: block;
+  font-weight: 600;
+  font-size: 15px;
+  line-height: 1.3;
+  margin-bottom: 5px;
+}
+.inspirations__list .tpl-snippet {
+  display: block;
+  font-size: 13px;
+  color: #6b6b6b;
+  line-height: 1.4;
+}
+
+/* =====================================================================
+ * T10: Größenwahl-Dropdown
+ * ===================================================================== */
+.elem__picker select {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #d8d4cb;
+  border-radius: 6px;
+  font-size: 14px;
+  font-family: inherit;
+  color: #16212c;
+  background: #fff;
+  cursor: pointer;
+  box-sizing: border-box;
+}
+
+/* =====================================================================
+ * Produkt-Tab: Availability + Benefits-Box (1:1 photo.css)
+ * + product-info-box mit mehr Atemraum (User-Wunsch)
+ * ===================================================================== */
+.product-info-box {
+  margin: 24px 0 28px;
+}
+.availability-status {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #4CAF50;
+  font-weight: 500;
+  font-size: 14px;
+  margin-bottom: 14px;
+}
+.benefits-box {
+  background: #f8f5f0;
+  border-radius: 8px;
+  padding: 16px;
+}
+.benefits-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.benefits-list li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 0;
+  font-size: 14px;
+  color: #333;          /* 1:1 photo.css — war #16212c (zu dunkel) */
+  font-weight: 400;     /* explizit regular damit Outfit nicht subpixel-rendert */
+}
+.benefits-list li svg { flex-shrink: 0; }
+
+/* =====================================================================
+ * Produkt-Tab: .size__picker — 1:1 Port aus starmap.css:1508-1700
+ * (citymap-size-picker.liquid HTML-Struktur:
+ *   .size__picker > a > .media > .inn > {.head>p, .content>p}
+ *   plus .a:before fuer schwarzen aktiven Outline,
+ *   plus .a > .media:before fuer gruenen Check-Badge)
+ * ===================================================================== */
+.elem__picker .size__picker {
+  display: flex;
+  align-items: flex-start;
+  justify-content: flex-start;
+  flex-wrap: wrap;
+  margin-bottom: 20px;
+  margin-left: -10px;
+  margin-top: -8px;
+}
+.elem__picker .size__picker > a {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: flex-start;
+  text-decoration: none;
+  width: 100%;
+  max-width: 44%;
+  position: relative;
+  margin: 8px 10px;
+}
+.elem__picker .size__picker > a .media {
+  position: relative;
+  display: block;
+  width: 100%;
+}
+.elem__picker .size__picker > a:before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: calc(100% - 1px);
+  height: calc(50% - 1px);
+  border: 1px solid transparent;
+  transition: 0.3s ease width, 0.6s ease height, 0.3s border-color;
+}
+.elem__picker .size__picker > a .media:before {
+  content: "";
+  position: absolute;
+  top: -4.5px;
+  right: -4.5px;
+  border-radius: 250px;
+  min-width: 15px;
+  max-width: 15px;
+  min-height: 15px;
+  max-height: 15px;
+  z-index: 4;
+  background: url("https://cdn.shopify.com/s/files/1/0977/3672/0709/files/check.svg");
+  background-repeat: no-repeat;
+  background-size: 9px;
+  background-position: center;
+  background-color: #4CAF50;
+  opacity: 0;
+  transition: 0.3s ease all;
+}
+.elem__picker .size__picker > a.current .media:before { opacity: 1; }
+.elem__picker .size__picker > a.current .inn .head { background-color: #000; }
+.elem__picker .size__picker > a.current .inn .head > p,
+.elem__picker .size__picker > a.current .inn .head > span { color: #fff; }
+.elem__picker .size__picker > a.current:before {
+  border-color: #000;
+  width: calc(100% - 1.8px);
+  height: calc(100% - 1.8px);
+}
+.elem__picker .size__picker > a:hover:before {
+  border-color: #000;
+  width: calc(100% - 1.8px);
+  height: calc(100% - 1.8px);
+}
+.elem__picker .size__picker > a .inn {
+  width: 100%;
+  border: 1px solid #828282;
+  border-radius: 2px;
+}
+.elem__picker .size__picker > a .inn .content {
+  position: relative;
+  z-index: 3;
+  padding-top: 10px;
+  text-align: center;
+  background-color: #fff;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding-bottom: 12px;
+}
+.elem__picker .size__picker > a .inn .content > span {
+  display: block;
+  text-align: center;
+  font-size: 10px;
+  line-height: 12px;
+  color: #828282;
+  font-weight: 500;
+  text-decoration: line-through;
+  transition: 0.3s ease all;
+}
+.elem__picker .size__picker > a .inn .content > p {
+  margin: 0;
+  font-size: 16px;
+  line-height: 20px;
+  font-weight: 500;
+  color: #000;
+  transition: 0.3s ease all;
+}
+.elem__picker .size__picker > a .head {
+  background-color: #fff;
+  position: relative;
+  z-index: 3;
+  transition: 0.3s ease all;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 24px;
+  width: 100%;
+}
+.elem__picker .size__picker > a .head > p {
+  margin: 0;
+  font-size: 12px;
+  line-height: 16px;
+  font-weight: 500;
+  color: #828282;
+  transition: 0.3s ease all;
+}
+
+/* =====================================================================
+ * .elem__picker ul (3-/4-Spalten Grid für Type-Picker, Frame-Picker etc.)
+ * 1:1 Port aus starmap.css:1701-1881
+ * Aktive Markierung: .media:after = animierter schwarzer Border,
+ *                    .media:before = schwarzer Check-Badge mit check.svg
+ * ===================================================================== */
+.elem__picker ul {
+  padding: 0;
+  list-style-type: none;
+  margin: 0;
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);    /* Default 5 cols (1:1 starmap.css:1707) */
+  background-color: transparent;
+  grid-gap: 16px;
+}
+.elem__picker ul.four {
+  grid-template-columns: repeat(4, 1fr);    /* 1:1 starmap.css:1714 */
+}
+/* Type-Picker (3 Produkte) + Frame-Picker (3 Rahmenfarben) — 3-Spalten-Grid.
+ * Icon-Groessen + Border-Width identisch zu Layout-Picker (Default 48x48,
+ * 1px Border) — Konsistenz zwischen allen Pickern. */
+.elem__picker ul.three {
+  grid-template-columns: repeat(3, 1fr);
+  grid-gap: 18px;
+}
+/* Atemraum zwischen Icon und Label — Default 5px klebte am Active-Border */
+.elem__picker ul.three li a > span.media {
+  margin-bottom: 28px;
+}
+/* Label-Text mehr line-height + Padding-Top fuer 2-zeilige Labels wie
+ * "Poster im Holzrahmen". */
+.elem__picker ul.three li a > span:not(.media) {
+  line-height: 1.4;
+  padding-top: 2px;
+}
+/* Orientation hat nur 2 Items — auf 2-Spalten-Grid (1:1 photo.css:519) */
+.elem__picker ul.four.orientation-picker {
+  grid-template-columns: repeat(2, 1fr);
+}
+.elem__picker ul li {
+  width: auto;
+  text-align: center;
+}
+.elem__picker ul li a {
+  display: inline-flex;
+  flex-direction: column;
+  font-size: 12px;
+  line-height: 15px;
+  color: #16212c;
+  font-weight: 500;
+  text-decoration: none;
+  align-items: center;
+  justify-content: center;
+}
+.elem__picker ul li a > span {
+  font-size: 12px;
+  line-height: 16px;
+  font-weight: 500;
+}
+.elem__picker ul li a > span.media {
+  min-width: 48px;
+  max-width: 48px;
+  min-height: 48px;
+  max-height: 48px;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 5px;
+}
+.elem__picker ul li a > span.media:after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  top: 0;
+  width: 0;
+  height: 0;
+  transition: 0.3s ease width, 0.6s ease height, 0.3s border-color;
+  border: 1px solid transparent;
+  border-radius: 0;
+  opacity: 1;
+}
+.elem__picker ul li a > span.media .img {
+  position: relative;
+  z-index: 2;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #fff;
+  height: 46px;
+  width: 46px;
+  margin-top: 1px;
+  padding: 1px;
+}
+.elem__picker ul li a > span.media .img > img {
+  max-width: 100%;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.elem__picker ul li a > span.media:before {
+  content: "";
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  min-width: 18px;
+  max-width: 18px;
+  min-height: 18px;
+  max-height: 18px;
+  z-index: 3;
+  background: url("https://cdn.shopify.com/s/files/1/0977/3672/0709/files/check.svg");
+  background-repeat: no-repeat;
+  background-size: 12px;
+  background-position: center;
+  background-color: #000;
+  opacity: 0;
+  transition: 0.3s ease all;
+}
+.elem__picker ul li a.current .media:before { opacity: 1; }
+.elem__picker ul li a.current .media:after {
+  width: 100%;
+  opacity: 1;
+  height: 100%;
+  border-color: #000;
+}
+.elem__picker ul li a:hover > span.media:after {
+  width: 100%;
+  height: 100%;
+  opacity: 1;
+  border-color: #000;
+}
+
+/* Type-Picker (tab__switcher) — Border weg (1:1 photo.css:1047), aber
+ * margin-bottom auf Standard-Section-Wert damit Frame-Picker drunter nicht
+ * direkt am Type-Picker klebt (Mama-Poster-Layout: el__format[2] enthält
+ * Frame-Picker direkt nach Type-Picker, anders als Original-Fotoposter). */
+.elem__picker.tab__switcher {
+  border-bottom: none !important;
+  margin-bottom: 32px;
+  padding-bottom: 0;
+}
+
+/* =====================================================================
+ * 2. Override-Block aus starmap.css:2700-2790 — kommt SPÄTER und
+ * überschreibt den ersten Block oben:
+ *   - .media:after content:none (deaktiviert)
+ *   - Border auf .media SELBST (1px transparent → #000 bei .current/hover)
+ *   - .media:before umpositioniert auf top-right (-4.5px, 15x15 rund)
+ *   - .img padding-bottom:128% Aspect-Ratio-Hack, object-fit:contain
+ * ===================================================================== */
+.elem__picker ul li a > span.media:after {
+  content: none;
+}
+.elem__picker ul li a > span.media {
+  border: 1px solid transparent;
+  transition: 0.3s ease all;
+}
+.elem__picker ul li a > span.media .img {
+  margin-top: 0;
+  padding: 3px;
+}
+.elem__picker ul li a.current > .media {
+  border-color: #000;
+}
+.elem__picker ul li a > span.media:before {
+  top: -4.5px;
+  right: -4.5px;
+  border-radius: 250px;
+  background-size: 9px;
+  min-width: 15px;
+  max-width: 15px;
+  min-height: 15px;
+  max-height: 15px;
+}
+.elem__picker ul li a:hover .media {
+  border: 1px solid #000;
+}
+.elem__picker ul li a > span.media .img {
+  height: 0;
+  position: relative;
+  padding-bottom: 128%;
+}
+.elem__picker ul li a > span.media .img img {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  padding: 2px;
+  border-radius: 3px;
+}
+.elem__picker ul li a > span.media .img svg {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+/* Block 2 Override (1:1 starmap.css:2701) — line-height tighter machen.
+ * Block 1 hat 15px, hier auf 12px reduziert. */
+.elem__picker ul li a {
+  line-height: 12px;
+}
+
+/* WICHTIG (1:1 starmap.css ganz am Ende): .media-Constraints aufheben.
+ * Ohne das bleibt .media auf 48x48 (von Block 1) — mit den Resets nimmt
+ * sie die Grid-Spalten-Breite + .img-padding-bottom:128% Höhe an. Erst
+ * dadurch wirkt der Active-Border als TALL Rectangle wie im Distantlines-
+ * Original (1:1.28 Ratio). */
+.elem__picker ul li a > span.media {
+  min-width: none;
+  max-width: none;
+  min-height: none;
+  max-height: none;
+}
+
+/* =====================================================================
+ * .bottom__controls — 1:1 Port aus starmap.css:434-558
+ * .desc (Preis + include) + .btn-group (cart-btn)
+ * ===================================================================== */
+.main__switcher .bottom__controls {
+  position: static;
+  background-color: #fff;
+  border-top: 1px solid #cecece;
+  width: 100%;
+  padding: 10px 24px;
+}
+.main__switcher .bottom__controls .desc {
+  display: flex;
+  align-items: flex-start;
+  justify-content: flex-start;
+}
+.main__switcher .bottom__controls .desc > p {
+  margin: 0;
+  font-size: 17px;
+  line-height: 24px;
+  margin-right: 30px;
+  font-weight: bold;
+  color: #16212c;
+  font-family: 'Outfit', Helvetica, Arial, sans-serif;
+  margin-top: 4px;
+}
+.main__switcher .bottom__controls .desc .include {
+  margin-right: 15px;
+  text-align: center;
+}
+.main__switcher .bottom__controls .desc .include > p {
+  margin: 0;
+  font-weight: 400;
+  font-size: 12px;
+  line-height: 16px;
+}
+.main__switcher .bottom__controls .desc .include > span {
+  display: block;
+  font-size: 24px;
+  line-height: 30px;
+  font-weight: 400;
+}
+.main__switcher .bottom__controls .btn-group {
+  margin-top: 20px;
+}
+
+/* =====================================================================
+ * .cart-btn + .weiter-btn — IDENTISCHE Optik (1:1 starmap.css cart-btn).
+ * Original-Kommentar in photo.css:1253: "Weiter-Button uebernimmt 1:1 die
+ * .cart-btn-Optik damit User keinen visuellen Unterschied wahrnimmt."
+ * ===================================================================== */
+.cart-btn,
+.weiter-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  text-decoration: none;
+  padding: 12px 20px;
+  min-height: 66px;
+  background-color: transparent;
+  color: #000;
+  border: 1px solid #000;
+  border-radius: 0;
+  font-size: 14px;
+  letter-spacing: 0.05em;
+  font-weight: 600;
+  font-family: 'Outfit', Helvetica, Arial, sans-serif;
+  transition: 0.3s ease all;
+  cursor: pointer;
+}
+.cart-btn:hover,
+.weiter-btn:hover {
+  background-color: #000;
+  color: #fff;
+}
+
+/* Weiter-Nav — Container fuer die Weiter-Button am Ende von Layout-/Text-Tab */
+.weiter-nav {
+  margin-top: 20px;
+}
+
+/* =====================================================================
+ * T11: Mobile Breakpoints
+ * ===================================================================== */
+@media (max-width: 900px) {
+  .main__switcher {
+    max-width: none;
+    border-left: none;
+    /* Switcher als interner Scroll-Container — sticky Tab-Bar darin
+     * macht den Begrenzer (1:1 starmap.css:4989-4997). Keine border-top
+     * (Fotoposter Mobile hat auch keine), Uebergang Cream->Weiss reicht. */
+    max-height: 70vh;
+    overflow-y: auto;
+    overscroll-behavior: auto;
+    -webkit-overflow-scrolling: touch;
+    touch-action: pan-y;
+  }
+  /* Tab-Bar = Begrenzer — klebt am Switcher-Top (1:1 starmap.css:4999-5003) */
+  .main__switcher > ul {
+    position: sticky;
+    top: 0;
+    z-index: 5;
+  }
+  /* Bottom-Controls auf Mobile statisch im Flow (1:1 starmap.css:5014-5021) */
+  .main__switcher .bottom__controls {
+    position: static;
+    margin-top: 15px;
+    background-color: #fff;
+    border-top: 1px solid #cecece;
+    width: 100%;
+    padding: 10px 24px;
+  }
+  /* Kein Mobile-Override fuer Tab-Hoehe — Desktop-Wert 68px gilt auch auf
+   * Mobile, 1:1 wie Fotoposter (starmap.css:580 hat keinen Override). */
+  .layout__wrapper,
+  .text__wrapper,
+  .produkt__wrapper {
+    padding: 16px;
+  }
+  .filter-options {
+    overflow-x: auto;
+    flex-wrap: nowrap;
+    padding-bottom: 4px;
+  }
+  .filter-options a {
+    flex: 0 0 auto;
+  }
+  .inspirations__cats {
+    overflow-x: auto;
+    flex-wrap: nowrap;
+  }
+  .inspirations__cats a {
+    flex: 0 0 auto;
+  }
+}

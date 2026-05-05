@@ -1,0 +1,58 @@
+*, *::before, *::after { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; }
+body {
+  font-family: 'Satoshi', system-ui, sans-serif;
+  background: #f5f3ee;
+  color: #1f1d1b;
+  min-height: 100vh;
+  /* WICHTIG: antialiasing macht Outfit/Satoshi dünner. Distantlines hat das
+   * im theme.css + citymap-ui-improvements.css gesetzt — ohne diese 2 Zeilen
+   * rendert Webkit Outfit mit Subpixel-AA was visuell heavier wirkt. */
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+.app {
+  display: grid;
+  grid-template-columns: 1fr 445px;
+  height: 100vh;       /* fixe Viewport-Hoehe -> Spalten scrollen unabhaengig */
+  overflow: hidden;
+}
+@media (max-width: 900px) {
+  .app {
+    grid-template-columns: 1fr;
+    height: auto;       /* Mobile: Stack scrollt natuerlich */
+    overflow: visible;
+  }
+}
+
+/* Mobile-Topbar — imitiert Distantlines-Theme-Header (Hamburger +
+ * Wordmark + Cart-Icon). Auf Desktop hidden, weil der echte
+ * Theme-Header dort spaeter dazukommt. */
+.preview-topbar { display: none; }
+@media (max-width: 900px) {
+  .preview-topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 16px;
+    height: 56px;
+    background: #f5f3ee;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+    font-family: 'Outfit', system-ui, sans-serif;
+    color: #1f1d1b;
+  }
+  .preview-topbar__brand {
+    font-weight: 600;
+    font-size: 16px;
+    letter-spacing: 0.02em;
+    text-transform: lowercase;
+  }
+  .preview-topbar__icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    color: #1f1d1b;
+  }
+}

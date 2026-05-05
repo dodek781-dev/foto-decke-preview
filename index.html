@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex,nofollow">
+  <meta name="description" content="Distantlines Foto-Decke Editor — Preview">
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='80'%3E🛏️%3C/text%3E%3C/svg%3E">
+  <title>Foto-Decke Editor (Preview)</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.css">
+  <link rel="stylesheet" href="css/base.css?v=1">
+  <link rel="stylesheet" href="css/editor.css?v=1">
+  <link rel="stylesheet" href="css/render.css?v=1">
+</head>
+<body>
+  <!-- Mobile-only Topbar: imitiert Distantlines-Theme-Header damit
+       der Standalone-Preview proportional zum Live-Shop wirkt. -->
+  <header class="preview-topbar" aria-hidden="true">
+    <span class="preview-topbar__icon">
+      <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round">
+        <line x1="3" y1="6" x2="17" y2="6"/>
+        <line x1="3" y1="10" x2="17" y2="10"/>
+        <line x1="3" y1="14" x2="17" y2="14"/>
+      </svg>
+    </span>
+    <span class="preview-topbar__brand">distantlines</span>
+    <span class="preview-topbar__icon">
+      <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M5 6h12l-1.5 8a2 2 0 0 1-2 1.7H8.5a2 2 0 0 1-2-1.7L5 6Z"/>
+        <path d="M8 6V4.5a2 2 0 0 1 4 0V6"/>
+      </svg>
+    </span>
+  </header>
+  <div class="app">
+    <section class="render-area" data-orientation="landscape" data-variant="standard" data-filter="original">
+      <div class="blanket-frame">
+        <div class="blanket-photo">
+          <div class="blanket-photo__placeholder">Foto hier hochladen &rarr;</div>
+        </div>
+      </div>
+    </section>
+
+    <aside class="main__switcher">
+      <ul>
+        <li>
+          <a href="#" class="current" data-tab="layout__wrapper">
+            <span>
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3" y="3" width="7" height="9" rx="1"/>
+                <rect x="14" y="3" width="7" height="5" rx="1"/>
+                <rect x="14" y="12" width="7" height="9" rx="1"/>
+                <rect x="3" y="16" width="7" height="5" rx="1"/>
+              </svg>
+            </span>
+            Layout
+          </a>
+        </li>
+        <li>
+          <a href="#" data-tab="produkt__wrapper">
+            <span>
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
+                <polyline points="3.27 6.96 12 12.01 20.73 6.96"/>
+                <line x1="12" y1="22.08" x2="12" y2="12"/>
+              </svg>
+            </span>
+            Produkt
+          </a>
+        </li>
+      </ul>
+
+      <!-- ============================================ -->
+      <!-- TAB 1: LAYOUT                                -->
+      <!-- ============================================ -->
+      <div class="layout__wrapper">
+        <div class="elem__picker">
+          <p>Dein Foto</p>
+          <label class="photo-upload-zone" id="photo-upload-zone">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+              <polyline points="17 8 12 3 7 8"/>
+              <line x1="12" y1="3" x2="12" y2="15"/>
+            </svg>
+            <p>Klicken oder Foto hierher ziehen</p>
+            <span class="upload-hint">JPG, PNG oder HEIC &mdash; max. 20 MB</span>
+            <input type="file" id="photo-file-input" accept="image/jpeg,image/png,image/heic,image/heif">
+          </label>
+
+          <div class="photo-upload-status" id="photo-upload-status"></div>
+
+          <div class="photo-change-row" id="photo-change-row">
+            <button type="button" id="photo-recrop-btn">Neu zuschneiden</button>
+            <button type="button" id="photo-change-btn">Anderes Foto</button>
+          </div>
+
+          <button type="button" class="photo-quality-btn" id="photo-quality-btn" style="display:none;" data-level="">
+            <span class="quality-icon" aria-hidden="true">
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                <path d="M3 7.5l3 3 5-6.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </span>
+            <span class="quality-label">Qualit&auml;t:</span>
+            <span class="quality-status">Ausgezeichnet</span>
+          </button>
+        </div>
+
+        <!-- Format / Ausrichtung -->
+        <div class="elem__picker">
+          <p>Ausrichtung</p>
+          <ul class="four orientation-picker" id="orientation-picker">
+            <li><a href="#" class="current" data-orientation="landscape">
+              <span class="media"><span class="img">
+                <svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <rect x="8" y="14" width="32" height="20" rx="1.5" style="fill:#ffffff;stroke:#16212c;stroke-width:2;"/>
+                </svg>
+              </span></span>Querformat</a></li>
+            <li><a href="#" data-orientation="portrait">
+              <span class="media"><span class="img">
+                <svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <rect x="14" y="8" width="20" height="32" rx="1.5" style="fill:#ffffff;stroke:#16212c;stroke-width:2;"/>
+                </svg>
+              </span></span>Hochformat</a></li>
+          </ul>
+        </div>
+
+        <!-- Weiter-Button -->
+        <div class="weiter-nav">
+          <a href="#" class="weiter-btn" data-target-tab="produkt__wrapper">Weiter zum Produkt</a>
+        </div>
+      </div>
+
+      <!-- ============================================ -->
+      <!-- TAB 2: PRODUKT                               -->
+      <!-- ============================================ -->
+      <div class="produkt__wrapper" style="display:none;">
+
+        <!-- Variant-Picker: Standard vs. Premium -->
+        <div class="elem__picker tab__switcher">
+          <p>Decken-Qualität</p>
+          <ul class="three" id="variant-picker">
+            <li><a href="#" class="current" data-variant="standard">
+              <span class="media"><span class="img">
+                <svg width="48" height="48" viewBox="0 0 48 48" fill="none">
+                  <rect x="6" y="14" width="36" height="22" rx="2" fill="#e8dcc4" stroke="#16212c" stroke-width="1.5"/>
+                </svg>
+              </span></span>
+              Standard
+            </a></li>
+            <li><a href="#" data-variant="premium">
+              <span class="media"><span class="img">
+                <svg width="48" height="48" viewBox="0 0 48 48" fill="none">
+                  <rect x="6" y="14" width="36" height="22" rx="2" fill="#d4c4a0" stroke="#16212c" stroke-width="1.5"/>
+                  <path d="M10 18l28 0M10 22l28 0" stroke="#a08868" stroke-width="0.5"/>
+                </svg>
+              </span></span>
+              Premium
+            </a></li>
+          </ul>
+        </div>
+
+        <!-- Größe -->
+        <div class="elem__picker">
+          <p>Gr&ouml;&szlig;e</p>
+          <div class="size__picker" id="size-picker">
+            <a href="#" class="current" data-size="70x100"><span class="media"><div class="inn"><span class="head"><p>70 &times; 100</p></span><span class="content"><p class="size-price">&euro;-</p></span></div></span></a>
+            <a href="#" data-size="100x150"><span class="media"><div class="inn"><span class="head"><p>100 &times; 150</p></span><span class="content"><p class="size-price">&euro;-</p></span></div></span></a>
+            <a href="#" data-size="150x200"><span class="media"><div class="inn"><span class="head"><p>150 &times; 200</p></span><span class="content"><p class="size-price">&euro;-</p></span></div></span></a>
+          </div>
+        </div>
+
+        <div class="product-info-box">
+          <div class="availability-status">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+              <circle cx="8" cy="8" r="8" fill="#4CAF50"/>
+              <path d="M6.5 10.5L4 8L4.7 7.3L6.5 9.1L11.3 4.3L12 5L6.5 10.5Z" fill="white"/>
+            </svg>
+            <span>Auf Lager &ndash; in 5-8 Werktagen bei dir</span>
+          </div>
+          <div class="benefits-box">
+            <ul class="benefits-list">
+              <li><svg width="14" height="14" viewBox="0 0 14 14"><path d="M5.5 9.5L2.5 6.5L3.2 5.8L5.5 8.1L10.8 2.8L11.5 3.5L5.5 9.5Z" fill="#4CAF50"/></svg>Vollfl&auml;chig bedruckt &ndash; dein Foto auf der ganzen Decke</li>
+              <li><svg width="14" height="14" viewBox="0 0 14 14"><path d="M5.5 9.5L2.5 6.5L3.2 5.8L5.5 8.1L10.8 2.8L11.5 3.5L5.5 9.5Z" fill="#4CAF50"/></svg>Personalisiertes Design</li>
+              <li><svg width="14" height="14" viewBox="0 0 14 14"><path d="M5.5 9.5L2.5 6.5L3.2 5.8L5.5 8.1L10.8 2.8L11.5 3.5L5.5 9.5Z" fill="#4CAF50"/></svg>Produktion in Europa</li>
+              <li><svg width="14" height="14" viewBox="0 0 14 14"><path d="M5.5 9.5L2.5 6.5L3.2 5.8L5.5 8.1L10.8 2.8L11.5 3.5L5.5 9.5Z" fill="#4CAF50"/></svg>Waschbar bei 30°C</li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- Bottom Controls -->
+        <div class="bottom__controls">
+          <div class="desc">
+            <p>Preis</p>
+            <div class="include">
+              <span class="variant-price" id="variant-price">&euro;-</span>
+              <p></p>
+            </div>
+          </div>
+          <div class="btn-group">
+            <a href="#" class="cart-btn" id="cart-btn">Zum Warenkorb hinzuf&uuml;gen</a>
+          </div>
+        </div>
+      </div>
+    </aside>
+  </div>
+
+  <!-- Bildqualitäts-Modal -->
+  <div class="quality-modal-backdrop" id="photo-quality-modal">
+    <div class="quality-modal">
+      <div class="quality-modal-header">
+        <h3>Bildqualit&auml;t</h3>
+        <button type="button" class="quality-modal-close" id="photo-quality-modal-close" aria-label="Schließen">&times;</button>
+      </div>
+      <p class="quality-modal-intro">L&auml;dst du ein Bild mit niedriger Aufl&ouml;sung hoch, kann der Druck unscharf wirken. Hier siehst du, welche Decken-Gr&ouml;&szlig;en mit deinem aktuellen Foto in voller Sch&auml;rfe gedruckt werden k&ouml;nnen.</p>
+      <ul class="quality-size-list" id="photo-quality-size-list"></ul>
+    </div>
+  </div>
+
+  <!-- Crop-Modal — Cropper.js Backdrop, ausserhalb von .app fuer z-index-Klarheit -->
+  <div class="cropper-modal-backdrop" id="photo-cropper-backdrop">
+    <div class="photo-crop-modal">
+      <h3>Foto zuschneiden</h3>
+      <div class="cropper-wrapper">
+        <img id="photo-cropper-image" alt="">
+      </div>
+      <p class="cropper-help">Ziehen, um den Ausschnitt zu verschieben &middot; Mausrad zum Zoomen</p>
+      <div class="cropper-actions">
+        <button type="button" class="cancel" id="photo-cropper-cancel">Abbrechen</button>
+        <button type="button" class="apply" id="photo-cropper-apply">&Uuml;bernehmen</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Hinweis-Modal: Cart ohne Foto-Upload -->
+  <div class="notice-modal-backdrop" id="cart-no-photo-modal">
+    <div class="notice-modal" role="dialog" aria-labelledby="cart-no-photo-title" aria-modal="true">
+      <div class="notice-modal-header">
+        <h3 id="cart-no-photo-title">Fast geschafft</h3>
+        <button type="button" class="notice-modal-close" id="cart-no-photo-close" aria-label="Schließen">&times;</button>
+      </div>
+      <p class="notice-modal-intro">Lade noch dein Lieblingsfoto hoch, damit deine Decke wirklich persönlich wird. Es dauert nur einen Moment.</p>
+      <div class="notice-modal-actions">
+        <a href="#" class="notice-modal-cta" id="cart-no-photo-cta">Foto hochladen</a>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.js"></script>
+  <script type="module" src="js/main.js"></script>
+</body>
+</html>
