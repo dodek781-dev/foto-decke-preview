@@ -30,10 +30,13 @@
     0 4px 12px rgba(0, 0, 0, 0.08);
 }
 
-/* Hochformat: Aspect-Ratio invertieren — die kurze Seite ist jetzt width. */
+/* Hochformat: Aspect-Ratio invertieren — die kurze Seite ist jetzt width.
+ * Höhe bewusst größer als Landscape (720 vs 600 Cap), damit Hochformat
+ * ähnlich präsent wirkt — sonst wäre die Fläche nur ~49% von Querformat. */
 .render-area[data-orientation="portrait"] .blanket-frame {
   --blanket-aspect: 0.7;        /* 70/100 */
-  max-width: 60vw;
+  height: min(85vh, 720px);
+  max-width: 65vw;
 }
 
 /* Foto: füllt den Frame komplett (Full-Bleed wie Merchone empfiehlt). */
@@ -87,6 +90,7 @@
     max-width: 92vw;
   }
   .render-area[data-orientation="portrait"] .blanket-frame {
-    max-width: 70vw;
+    height: min(65vh, 540px);
+    max-width: 75vw;
   }
 }
