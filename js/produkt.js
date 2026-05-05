@@ -1,67 +1,54 @@
-/* Produkt-Tab — Variant-Picker (Standard/Premium) + Größen-Picker (70x100/100x150/150x200)
- * + Live-Preis aus state.SKU_MAP. Cart-Btn ist Preview-only (kein echter Cart bis
- * Theme-Migration). */
+/* Produkt-Tab + Layout-Tab Picker — Foto-Fußmatte V1.5
+ * - Material-Picker (Caramel/Grau/Schwarz) im Layout-Tab
+ * - Größen-Picker (70×50 / 140×90) im Produkt-Tab
+ * - Cart-Btn als Preview-only (kein echter Cart bis Theme-Migration) */
 import { setState, state, SKU_MAP } from './state.js';
 
-/* Verkaufspreise (EUR) — fest verdrahtet, ~3x Merchone-Einkauf orientiert.
- * Werden später aus Shopify-Variants gelesen, sobald ins Theme migriert. */
-const SALE_PRICES = {
-  'standard': { '70x100': 39.90, '100x150': 59.90, '150x200': 89.90 },
-  'premium':  { '70x100': 69.90, '100x150': 99.90, '150x200': 149.90 },
-};
-
-const $variantLinks = document.querySelectorAll('#variant-picker > li > a');
+const $materialLinks = document.querySelectorAll('#material-picker > li > a');
 const $sizeLinks = document.querySelectorAll('#size-picker > a');
-const $sizePrices = document.querySelectorAll('#size-picker .size-price');
 const $priceDisplay = document.getElementById('variant-price');
-const $orientationLinks = document.querySelectorAll('#orientation-picker > li > a');
 
 function fmtPrice(eur) {
   return '€' + eur.toFixed(2).replace('.', ',');
 }
 
 function refreshPrices() {
-  const v = state.variant;
-  const prices = SALE_PRICES[v] || SALE_PRICES['standard'];
-  $sizeLinks.forEach((link, i) => {
+  // Pro Größen-Link den Preis aus SKU_MAP setzen
+  $sizeLinks.forEach(link => {
     const size = link.dataset.size;
     const priceEl = link.querySelector('.size-price');
-    if (priceEl && prices[size] != null) {
-      priceEl.textContent = fmtPrice(prices[size]);
+    const entry = SKU_MAP[size];
+    if (priceEl && entry) {
+      priceEl.textContent = fmtPrice(entry.price_eur);
     }
   });
+  // Header-Preis aus aktueller Größe
   if ($priceDisplay) {
-    const cur = prices[state.size] || prices['70x100'];
-    $priceDisplay.textContent = fmtPrice(cur);
+    const cur = SKU_MAP[state.size] || SKU_MAP['70x50'];
+    $priceDisplay.textContent = fmtPrice(cur.price_eur);
   }
 }
 
-/* Orientation-Picker (Tab 1) — Quer/Hochformat */
-$orientationLinks.forEach(link => {
+/* Material-Picker (Layout-Tab) — Textur-Farbe der Fußmatte */
+$materialLinks.forEach(link => {
   link.addEventListener('click', e => {
     e.preventDefault();
-    $orientationLinks.forEach(l => l.classList.toggle('current', l === link));
-    setState({ orientation: link.dataset.orientation });
+    $materialLinks.forEach(l => l.classList.toggle('current', l === link));
+    setState({ material: link.dataset.material });
   });
 });
 
-/* Variant-Picker — Standard / Premium */
-$variantLinks.forEach(link => {
-  link.addEventListener('click', e => {
-    e.preventDefault();
-    $variantLinks.forEach(l => l.classList.toggle('current', l === link));
-    setState({ variant: link.dataset.variant });
-    refreshPrices();
-  });
-});
-
-/* Größen-Picker */
+/* Größen-Picker (Produkt-Tab) — wechselt SKU, Preis, und Frame-Aspect */
 $sizeLinks.forEach(link => {
   link.addEventListener('click', e => {
     e.preventDefault();
     $sizeLinks.forEach(l => l.classList.toggle('current', l === link));
     setState({ size: link.dataset.size });
     refreshPrices();
+    /* Bei Größen-Wechsel ändert sich das Aspect (70×50 = 1.4, 140×90 ≈ 1.556).
+     * render.js setzt --blanket-aspect daraus.
+     * Wenn schon ein Foto gecroppt ist, müsste der User es neu zuschneiden —
+     * für V1 lassen wir's: object-fit:cover clipt das Foto, akzeptabler Default. */
   });
 });
 
@@ -69,7 +56,7 @@ $sizeLinks.forEach(link => {
 refreshPrices();
 
 /* Cart-Btn — V1 Preview-only.
- * Validation wie Fotoposter: ohne Foto öffnet ein Hinweis-Modal. */
+ * Validation: ohne Foto öffnet ein Hinweis-Modal. */
 const $cartBtn = document.getElementById('cart-btn');
 const $noticeModal = document.getElementById('cart-no-photo-modal');
 const $noticeClose = document.getElementById('cart-no-photo-close');
@@ -85,17 +72,16 @@ if ($cartBtn) {
       openNoticeModal();
       return;
     }
-    /* Cart-Properties die im Live-Theme gesetzt würden — in V1 nur in
+    /* Cart-Properties die im Live-Theme gesetzt würden — V1 nur in
      * console.log + alert sichtbar. Wandert später in cart/add.js POST. */
-    const skuEntry = (SKU_MAP[state.variant] || {})[state.size];
+    const skuEntry = SKU_MAP[state.size];
     const properties = {
       _provider: 'merchone',
       _merchone_product_sku: skuEntry ? skuEntry.sku : '',
       _print_image_url: '(wird vom Hetzner-Render-Server gesetzt)',
       _job_id: '(uuid kommt vom Server)',
       _Photo_Config_JSON: JSON.stringify({
-        orientation: state.orientation,
-        variant: state.variant,
+        material: state.material,
         size: state.size,
         filter: state.filter,
         crop_width: state.crop_width,
@@ -104,16 +90,15 @@ if ($cartBtn) {
         natural_height: state.natural_height,
         print_px: skuEntry ? skuEntry.print_px : null,
       }),
-      _Product_Type: 'Foto-Decke',
+      _Product_Type: 'Foto-Fußmatte',
       _Size: skuEntry ? skuEntry.label : state.size,
-      _Variant: state.variant === 'premium' ? 'Premium' : 'Standard',
+      _Material: state.material,
     };
-    console.log('[Foto-Decke] Cart-Properties (V1 Preview):', properties);
+    console.log('[Foto-Fußmatte] Cart-Properties (V1 Preview):', properties);
     alert(
       'Preview: Im Live-Shop würde hier der Cart-Add ausgelöst.\n\n' +
       'product_sku: ' + (properties._merchone_product_sku || '?') + '\n' +
-      'orientation: ' + state.orientation + '\n' +
-      'variant: ' + state.variant + '\n' +
+      'material: ' + state.material + '\n' +
       'size: ' + state.size
     );
   });

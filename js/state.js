@@ -1,21 +1,26 @@
-/* Reaktiver State + Subscriber-Pattern für den Foto-Decken-Editor.
+/* Reaktiver State + Subscriber-Pattern für den Foto-Fußmatten-Editor.
+ * (V1.0–V1.4 war Foto-Decke; V1.5 Pivot zu Fußmatte — Decke kommt
+ * später als Phase 2 mit Multi-Foto-Collage zurück.)
+ *
  * setState({...}) feuert alle Subscriber, render.js zeichnet die DOM. */
 
 export const state = {
   // Foto
-  photo_url: null,             // gecroppte DataURL (was im Mockup gezeigt wird)
-  photo_url_original: null,    // ungecroppte DataURL (für "Neu zuschneiden")
+  photo_url: null,
+  photo_url_original: null,
   photo_crop: null,
-  natural_width: 0,            // Original-Pixel vor 2400px-Resize, für DPI-Check
+  natural_width: 0,
   natural_height: 0,
-  crop_width: 1,               // Crop-Verhältnisse 0..1 (cropped/source)
+  crop_width: 1,
   crop_height: 1,
   filter: 'original',
 
-  // Format & Decken-Variante
-  orientation: 'landscape',    // 'landscape' (Querformat) | 'portrait' (Hochformat)
-  variant: 'standard',         // 'standard' (BLB-SKUs) | 'premium' (BLP-SKUs)
-  size: '100x70',              // '70x100' | '100x150' (= 150x100) | '150x200' (= 200x150)
+  // Material (3 Texturen)
+  material: 'caramel',         // 'caramel' | 'gray' | 'black'
+
+  // Größe & Aspect (Fußmatte hat per-Size unterschiedliche Aspects!)
+  size: '70x50',               // '70x50' | '140x90'
+  variant: 'standard',         // nur 'standard' (Premium-Rug existiert nicht)
 };
 
 const subscribers = [];
@@ -27,17 +32,28 @@ export function setState(updates) {
   subscribers.forEach(fn => fn(state));
 }
 
-/* Merchone-SKU-Mapping (siehe Daten/merchone-catalog.md).
- * Print-Pixel kommen aus den Print-Area-Guides @ 150 dpi inkl. 3 cm Bleed. */
+/* Merchone-SKU-Mapping für Fußmatten-Rugs (CPS = "Carpet Standard").
+ * Aus Daten/merchone-catalog.md.
+ * Print-Pixel @ 150 dpi inkl. 3 cm Bleed allseits (laut Print-Area-Guide).
+ * Aspect = width/height der sichtbaren Fläche (nicht inkl. Bleed). */
 export const SKU_MAP = {
-  'standard': {
-    '70x100':  { sku: 'BLB1000701', label: '70 × 100 cm',  print_px: [6260, 4488] },
-    '100x150': { sku: 'BLB1501001', label: '100 × 150 cm', print_px: [9213, 6260] },
-    '150x200': { sku: 'BLB2001501', label: '150 × 200 cm', print_px: [12165, 9213] },
+  '70x50':  {
+    sku: 'CPS0700501',
+    label: '70 × 50 cm',
+    aspect: 70 / 50,            // 1.4
+    print_px: [4488, 3307],
+    price_eur: 24.90,
   },
-  'premium': {
-    '70x100':  { sku: 'BLP1000701', label: '70 × 100 cm',  print_px: [6260, 4488] },
-    '100x150': { sku: 'BLP1501001', label: '100 × 150 cm', print_px: [9213, 6260] },
-    '150x200': { sku: 'BLP2001501', label: '150 × 200 cm', print_px: [12165, 9213] },
+  '140x90': {
+    sku: 'CPS1400901',
+    label: '140 × 90 cm',
+    aspect: 140 / 90,           // ≈ 1.556
+    print_px: [8622, 5669],
+    price_eur: 64.90,
   },
 };
+
+/* Computed: aktueller Aspect aus state.size */
+export function currentAspect(s = state) {
+  return (SKU_MAP[s.size] || SKU_MAP['70x50']).aspect;
+}

@@ -68,10 +68,8 @@ update(state);
  * Modal — Click auf Quality-Btn öffnet, listet alle Größen mit Status
  * ===================================================================== */
 const QUALITY_CHECK_SIZES = [
-  { label: '30x40 cm',  w: 30, h: 40 },
-  { label: '40x50 cm',  w: 40, h: 50 },
-  { label: '50x70 cm',  w: 50, h: 70 },
-  { label: '70x100 cm', w: 70, h: 100 },
+  { label: '70 × 50 cm',  w: 70,  h: 50 },
+  { label: '140 × 90 cm', w: 140, h: 90 },
 ];
 
 function renderModalList() {

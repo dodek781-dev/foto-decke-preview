@@ -1,5 +1,6 @@
-/* Render-Area: Decken-Frame in Quer-/Hochformat. V1 ohne Raum-Mockup,
- * nur ein simpler Decken-Rahmen mit Foto. */
+/* Render-Area: Foto-Fußmatten-Frame (V1.5).
+ * Material-Textur als Frame-Background, Foto darüber als full-bleed.
+ * Aspect-Ratio kommt per inline-style aus state.size (70×50 → 1.4, 140×90 ≈ 1.556). */
 
 .render-area {
   display: flex;
@@ -12,17 +13,18 @@
   overflow: hidden;
 }
 
-/* Decken-Frame — Aspect-Ratio aus orientation-Data-Attribute.
- * Approach: aspect-ratio + height + max-width — Browser balanciert die
- * Dimensionen automatisch. Bei zu schmalem Viewport wird die height
- * proportional reduziert (statt verzerrt). */
+/* Frame: Aspect-Ratio aus inline `--blanket-aspect`-Var (state.aspect),
+ * height fest, width berechnet via aspect-ratio CSS-Property. */
 .blanket-frame {
-  --blanket-aspect: 1.4286;     /* width/height — default landscape (100/70) */
+  --blanket-aspect: 1.4;       /* default 70×50 (überschrieben inline aus state.size) */
   position: relative;
   height: min(70vh, 600px);
   aspect-ratio: var(--blanket-aspect);
   max-width: 90vw;
-  background: #fafaf8;
+  max-height: 80vh;
+  background: #fafaf8;          /* Fallback wenn Material-Image nicht lädt */
+  background-size: cover;
+  background-position: center;
   border-radius: 10px;
   overflow: hidden;
   box-shadow:
@@ -30,24 +32,26 @@
     0 4px 12px rgba(0, 0, 0, 0.08);
 }
 
-/* Hochformat: Aspect-Ratio invertieren — die kurze Seite ist jetzt width.
- * Höhe bewusst größer als Landscape (720 vs 600 Cap), damit Hochformat
- * ähnlich präsent wirkt — sonst wäre die Fläche nur ~49% von Querformat. */
-.render-area[data-orientation="portrait"] .blanket-frame {
-  --blanket-aspect: 0.7;        /* 70/100 */
-  height: min(85vh, 720px);
-  max-width: 65vw;
+/* Material-Texturen — gewählt im Layout-Tab via #material-picker */
+.render-area[data-material="caramel"] .blanket-frame {
+  background-image: url('../assets/textures/caramel.jpg');
+}
+.render-area[data-material="gray"] .blanket-frame {
+  background-image: url('../assets/textures/gray.jpg');
+}
+.render-area[data-material="black"] .blanket-frame {
+  background-image: url('../assets/textures/black.jpg');
 }
 
-/* Foto: füllt den Frame komplett (Full-Bleed wie Merchone empfiehlt). */
+/* Foto: füllt den Frame (Full-Bleed). Deckt die Textur ab wenn da. */
 .blanket-photo {
   position: absolute;
   inset: 0;
-  background: #ddd;
   overflow: hidden;
   display: flex;
   align-items: center;
   justify-content: center;
+  /* Kein eigener background — Textur scheint durch wenn keine .blanket-photo > img */
 }
 .blanket-photo img {
   width: 100%;
@@ -56,26 +60,25 @@
   display: block;
 }
 .blanket-photo__placeholder {
-  color: #888;
+  color: rgba(0, 0, 0, 0.6);
   font-size: 13px;
   font-family: 'Outfit', system-ui, sans-serif;
   letter-spacing: 0.02em;
-  padding: 0 24px;
+  padding: 8px 20px;
   text-align: center;
+  background: rgba(255, 255, 255, 0.85);
+  border-radius: 6px;
+  /* Lesbare Pille auf jeder Textur-Farbe (auch schwarz) */
 }
 
-/* Variante (Standard/Premium): subtile Material-Andeutung. */
-.render-area[data-variant="premium"] .blanket-frame {
-  background: #f3eee2;
-  box-shadow:
-    0 16px 48px rgba(0, 0, 0, 0.20),
-    0 4px 12px rgba(0, 0, 0, 0.10);
+/* Schwarze Material → Placeholder-Text auf hellem Pill bleibt dunkel,
+ * aber etwas hellere Pill-BG-Transparenz für mehr Kontrast. */
+.render-area[data-material="black"] .blanket-photo__placeholder {
+  background: rgba(255, 255, 255, 0.92);
 }
 
 /* =====================================================================
  * Mobile-Overrides — MUESSEN am Ende der Datei stehen.
- * @media aendert die Spezifitaet NICHT, deshalb muessen Mobile-Regeln
- * NACH den Desktop-Defaults kommen, sonst werden sie ueberschrieben.
  * ===================================================================== */
 @media (max-width: 900px) {
   .render-area {
@@ -88,9 +91,5 @@
   .blanket-frame {
     height: min(50vh, 420px);
     max-width: 92vw;
-  }
-  .render-area[data-orientation="portrait"] .blanket-frame {
-    height: min(65vh, 540px);
-    max-width: 75vw;
   }
 }
