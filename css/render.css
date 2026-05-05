@@ -25,7 +25,9 @@
   background: #fafaf8;          /* Fallback wenn Material-Image nicht lädt */
   background-size: cover;
   background-position: center;
-  border-radius: 10px;
+  /* Border-Radius matcht echte Merchone-Fußmatten-Form (Mockup-Verifikation
+   * 2026-05-05): deutlich abgerundete Ecken, ~4-5% der langen Seite. */
+  border-radius: 28px;
   overflow: hidden;
   box-shadow:
     0 14px 40px rgba(0, 0, 0, 0.18),
