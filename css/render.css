@@ -25,11 +25,9 @@
   background: #fafaf8;          /* Fallback wenn Material-Image nicht lädt */
   background-size: cover;
   background-position: center;
-  /* Border-Radius matcht Pet-Printed-Customer-Mockup (echte Verkaufs-Optik,
-   * verifiziert 2026-05-05): deutlich abgerundete Ecken, ~4% der langen
-   * Seite. Print-Area-Tool-Display zeigt zwar scharfe Form, aber das ist
-   * nur die Print-Spec — der Kunde sieht die abgerundete Form im Shop. */
-  border-radius: 24px;
+  /* Subtle Eckrundung — User-Wunsch 4px (V1.5.3 mit 24px war zu viel,
+   * V1.5.2 mit 0px zu scharf). */
+  border-radius: 4px;
   overflow: hidden;
   box-shadow:
     0 14px 40px rgba(0, 0, 0, 0.18),
