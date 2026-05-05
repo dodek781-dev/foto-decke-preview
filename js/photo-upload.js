@@ -89,10 +89,10 @@ function resizeDataUrlIfTooLarge(dataUrl, maxSide) {
 // Editor und Crop muessen 1:1 sein, sonst clipt object-fit:cover spaeter.
 // -------------------------------------------------------------------
 function measureCropAspect() {
-  const el = document.querySelector('.poster-photo');
-  if (!el) return 5 / 4; // sicherer Fallback ~Landscape
+  const el = document.querySelector('.blanket-photo');
+  if (!el) return 100 / 70; // Fallback: Decken-Querformat (~1.4286)
   const rect = el.getBoundingClientRect();
-  if (rect.width <= 0 || rect.height <= 0) return 5 / 4;
+  if (rect.width <= 0 || rect.height <= 0) return 100 / 70;
   return rect.width / rect.height;
 }
 
@@ -324,7 +324,7 @@ function init() {
         openCropperWithUrl(original);
       } else {
         // Fallback: was als <img> in der Render-Area liegt
-        const img = document.querySelector('.poster-photo img');
+        const img = document.querySelector('.blanket-photo img');
         if (img && img.src) openCropperWithUrl(img.src);
       }
     });

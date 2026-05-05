@@ -13,16 +13,15 @@
 }
 
 /* Decken-Frame — Aspect-Ratio aus orientation-Data-Attribute.
- * V1.1 Shutterfly-Clean: gerade Kanten + leichte Rundung + sanfter Drop-Shadow.
- * (Vorherige SVG-Wave-Maske wirkte zu künstlich — siehe Plan Iteration Log.) */
+ * Approach: aspect-ratio + height + max-width — Browser balanciert die
+ * Dimensionen automatisch. Bei zu schmalem Viewport wird die height
+ * proportional reduziert (statt verzerrt). */
 .blanket-frame {
-  --blanket-base: min(70vh, 600px);
-  --blanket-ratio: 1.4286;     /* default: landscape (Querformat) */
+  --blanket-aspect: 1.4286;     /* width/height — default landscape (100/70) */
   position: relative;
-  width: var(--blanket-base);
-  height: calc(var(--blanket-base) / var(--blanket-ratio));
+  height: min(70vh, 600px);
+  aspect-ratio: var(--blanket-aspect);
   max-width: 90vw;
-  max-height: 80vh;
   background: #fafaf8;
   border-radius: 10px;
   overflow: hidden;
@@ -31,16 +30,13 @@
     0 4px 12px rgba(0, 0, 0, 0.08);
 }
 
-/* Hochformat: Frame um 90° flippen → Aspect-Ratio invertieren. */
+/* Hochformat: Aspect-Ratio invertieren — die kurze Seite ist jetzt width. */
 .render-area[data-orientation="portrait"] .blanket-frame {
-  --blanket-ratio: 0.7;
-  width: calc(var(--blanket-base) * var(--blanket-ratio));
-  height: var(--blanket-base);
+  --blanket-aspect: 0.7;        /* 70/100 */
   max-width: 60vw;
 }
 
-/* Foto: füllt den Frame komplett (Full-Bleed wie Merchone empfiehlt).
- * Liegt INNERHALB der mask-image Wave — wird also automatisch mitgewellt. */
+/* Foto: füllt den Frame komplett (Full-Bleed wie Merchone empfiehlt). */
 .blanket-photo {
   position: absolute;
   inset: 0;
@@ -65,8 +61,7 @@
   text-align: center;
 }
 
-/* Variante (Standard/Premium): subtile Material-Andeutung — Premium ein
- * Hauch wärmerer/dunklerer Frame-Hintergrund mit leichter Textur. */
+/* Variante (Standard/Premium): subtile Material-Andeutung. */
 .render-area[data-variant="premium"] .blanket-frame {
   background: #f3eee2;
   box-shadow:
@@ -88,14 +83,10 @@
     padding: 24px 12px 60px;
   }
   .blanket-frame {
-    --blanket-base: min(50vh, 420px);
+    height: min(50vh, 420px);
     max-width: 92vw;
-    width:  min(var(--blanket-base), 92vw);
-    height: calc(min(var(--blanket-base), 92vw) / var(--blanket-ratio));
   }
   .render-area[data-orientation="portrait"] .blanket-frame {
-    width:  min(calc(var(--blanket-base) * var(--blanket-ratio)), 70vw);
-    height: calc(min(calc(var(--blanket-base) * var(--blanket-ratio)), 70vw) / var(--blanket-ratio));
     max-width: 70vw;
   }
 }
