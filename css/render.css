@@ -109,11 +109,12 @@
   border-radius: 50% !important;          /* Bild selbst auch rund (Sicherheits-Override) */
 }
 
-/* Foto-Größen identisch: 1 + 2 Photos beide 30cqw je Slot.
- * (V1.7.0-Größe, User: "Einzelfoto war OK bevor ich's vergrößert hatte") */
+/* Foto-Größen — beide Layouts uniform 45cqw je Slot.
+ * Bei 2-Foto-Layout: Padding/Gap/Texte kleiner damit's in den Querformat-
+ * Frame passt (vertikal kritischer als horizontal bei Querformat-Decke). */
 .blanket-photo {
-  width: 30cqw !important;
-  height: 30cqw !important;
+  width: 45cqw !important;
+  height: 45cqw !important;
 }
 
 /* Wenn min. ein Foto da → Layout: Hauptzeile oben, Foto(s) mitte, Untertitel unten */
@@ -156,14 +157,25 @@
   /* Frame bleibt column, aber wir positionieren die 2 Photos via gap in
    * einer horizontal-spread-Logik. */
 }
-/* Beide Slots im 2-Foto-Modus auf gleichen flex-order, normaler Gap. */
+/* 2-Foto-Modus: Photos nebeneinander mit kleinem Gap, Frame-Padding/Texte
+ * verkleinert damit 45cqw Photos vertikal in den Querformat-Frame passen. */
+.render-area[data-photo-count="2"] .blanket-frame {
+  padding: 4cqw 2cqw;
+  gap: 2cqw;
+}
+.render-area[data-photo-count="2"] .blanket-text__hauptzeile {
+  font-size: 8cqw;
+}
+.render-area[data-photo-count="2"] .blanket-text__untertitel {
+  font-size: 2.5cqw;
+}
 .render-area[data-photo-count="2"] .blanket-photo[data-slot="1"] {
   order: 2;
-  margin-right: 2.5cqw;
+  margin-right: 1cqw;
 }
 .render-area[data-photo-count="2"] .blanket-photo[data-slot="2"] {
   order: 2;
-  margin-left: 2.5cqw;
+  margin-left: 1cqw;
 }
 /* Damit beide Slots auf einer Linie stehen, wechseln wir den Frame-Direction-
  * Hack: wir benutzen flex-wrap und einen invisible "row-break" zwischen
