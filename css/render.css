@@ -109,15 +109,13 @@
   display: block;
 }
 
-/* Default-Größe pro Foto (1-Foto-Layout) */
+/* Foto-Größen — matched Pet-Printed-Vergleich (Foto ~45% der Frame-Höhe).
+ * V1.7.1: deutlich größer als V1.7 (war 30/22cqw — zu klein). */
 .render-area[data-photo-count="1"] .blanket-photo {
-  width: 30cqw;
+  width: 45cqw;
 }
-
-/* 2-Foto-Layout: Photos nebeneinander zentriert mit symmetrischem Gap.
- * Foto-Größe kleiner (~22cqw), gap ~5cqw → totale Foto-Reihe ~49cqw */
 .render-area[data-photo-count="2"] .blanket-photo {
-  width: 22cqw;
+  width: 32cqw;
 }
 
 /* Wenn min. ein Foto da → Layout: Hauptzeile oben, Foto(s) mitte, Untertitel unten */

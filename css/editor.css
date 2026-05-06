@@ -1682,20 +1682,23 @@
 
 /* =====================================================================
  * V1.7: Cropper-Modal kreisförmig maskieren
- * Crop ist mathematisch quadratisch (aspectRatio: 1), aber visuell
- * zeigt sich der Crop-Bereich als Kreis — Render-Slot ist eh Kreis. */
+ * !important nötig weil Cropper.js seine Klassen mit eigener Specificity
+ * setzt UND inline-styles direkt setzt. */
 .cropper-modal-backdrop[data-shape="circle"] .cropper-crop-box,
-.cropper-modal-backdrop[data-shape="circle"] .cropper-view-box {
-  border-radius: 50%;
-  overflow: hidden;
-}
-.cropper-modal-backdrop[data-shape="circle"] .cropper-view-box {
-  outline: 1.5px solid rgba(255, 255, 255, 0.95);
-  outline-offset: -1.5px;
-}
-/* .cropper-face (innere Click-Fläche) auch rund clippen */
+.cropper-modal-backdrop[data-shape="circle"] .cropper-view-box,
 .cropper-modal-backdrop[data-shape="circle"] .cropper-face {
-  border-radius: 50%;
+  border-radius: 50% !important;
+  overflow: hidden !important;
+}
+.cropper-modal-backdrop[data-shape="circle"] .cropper-view-box {
+  outline: 1.5px solid rgba(255, 255, 255, 0.95) !important;
+  outline-offset: -1.5px !important;
+}
+/* Crop-Box-Resize-Handles (Linien + Punkte) — verstecken im Kreis-Modus,
+ * weil sie an Ecken sitzen und beim Kreis-Crop irreführend sind. */
+.cropper-modal-backdrop[data-shape="circle"] .cropper-line,
+.cropper-modal-backdrop[data-shape="circle"] .cropper-point {
+  display: none !important;
 }
 
 /* =====================================================================
