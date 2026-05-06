@@ -22,12 +22,12 @@
  * cappen ohne Height proportional zu schrumpfen → verzerrtes Aspect). */
 .blanket-frame {
   --blanket-aspect: 1.4;            /* width/height — JS setzt pro Größe */
-  --frame-base: min(78vh, 680px);   /* feste Hoehe, viewport-responsive */
+  --frame-base: min(92vh, 820px);   /* feste Hoehe, viewport-responsive */
   position: relative;
   width:  var(--frame-base);
   height: calc(var(--frame-base) / var(--blanket-aspect));
-  max-width: 90vw;
-  max-height: 78vh;
+  max-width: 92vw;
+  max-height: 92vh;
   background: #fafaf8;
   background-size: cover;
   background-position: center;
@@ -219,9 +219,9 @@
    * koppeln, sonst cappt max-width die Width ohne dass Height mitschrumpft
    * → Querformat sieht fast quadratisch aus (User-Bug-Report 2026-05-06). */
   .blanket-frame {
-    --frame-base: min(62vh, 520px);
-    max-width: 92vw;
-    width:  min(var(--frame-base), 92vw);
-    height: calc(min(var(--frame-base), 92vw) / var(--blanket-aspect));
+    --frame-base: min(72vh, 620px);
+    max-width: 94vw;
+    width:  min(var(--frame-base), 94vw);
+    height: calc(min(var(--frame-base), 94vw) / var(--blanket-aspect));
   }
 }
