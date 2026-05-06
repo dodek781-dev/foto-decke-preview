@@ -1,6 +1,5 @@
-/* Render-Area: Foto-Fußmatten-Frame (V1.5).
- * Material-Textur als Frame-Background, Foto darüber als full-bleed.
- * Aspect-Ratio kommt per inline-style aus state.size (70×50 → 1.4, 140×90 ≈ 1.556). */
+/* Render-Area: Personalisierte Fußmatte (V1.6, FussmattenKING-Style).
+ * Material-Textur als BG, Text als Haupt-Element, Foto optional in Kreis. */
 
 .render-area {
   display: flex;
@@ -13,28 +12,35 @@
   overflow: hidden;
 }
 
-/* Frame: Aspect-Ratio aus inline `--blanket-aspect`-Var (state.aspect),
- * height fest, width berechnet via aspect-ratio CSS-Property. */
 .blanket-frame {
-  --blanket-aspect: 1.4;       /* default 70×50 (überschrieben inline aus state.size) */
+  --blanket-aspect: 1.4;
   position: relative;
   height: min(70vh, 600px);
   aspect-ratio: var(--blanket-aspect);
   max-width: 90vw;
   max-height: 80vh;
-  background: #fafaf8;          /* Fallback wenn Material-Image nicht lädt */
+  background: #fafaf8;
   background-size: cover;
   background-position: center;
-  /* Subtle Eckrundung — User-Wunsch 4px (V1.5.3 mit 24px war zu viel,
-   * V1.5.2 mit 0px zu scharf). */
   border-radius: 4px;
   overflow: hidden;
   box-shadow:
     0 14px 40px rgba(0, 0, 0, 0.18),
     0 4px 12px rgba(0, 0, 0, 0.08);
+
+  /* Container-Type für cqw-Schriftskalierung — Text proportional zur Mattengröße */
+  container-type: inline-size;
+
+  /* Inneres Layout: Text + optional Foto, vertikal zentriert */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 6cqw 8cqw;
+  gap: 4cqw;
 }
 
-/* Material-Texturen — gewählt im Layout-Tab via #material-picker */
+/* Material-Texturen */
 .render-area[data-material="caramel"] .blanket-frame {
   background-image: url('../assets/textures/caramel.jpg');
 }
@@ -45,15 +51,50 @@
   background-image: url('../assets/textures/black.jpg');
 }
 
-/* Foto: füllt den Frame (Full-Bleed). Deckt die Textur ab wenn da. */
-.blanket-photo {
-  position: absolute;
-  inset: 0;
-  overflow: hidden;
+/* Text-Block: Hauptzeile groß + Untertitel klein.
+ * Schriftgrößen in cqw → skalieren mit Mattengröße. */
+.blanket-text {
+  text-align: center;
   display: flex;
-  align-items: center;
-  justify-content: center;
-  /* Kein eigener background — Textur scheint durch wenn keine .blanket-photo > img */
+  flex-direction: column;
+  gap: 1.5cqw;
+  color: #1a1a1a;          /* default für helle Materialien */
+  max-width: 100%;
+}
+.blanket-text__hauptzeile {
+  margin: 0;
+  font-size: 11cqw;
+  line-height: 1.05;
+  letter-spacing: 0.01em;
+  word-break: break-word;
+}
+.blanket-text__untertitel {
+  margin: 0;
+  font-size: 3.2cqw;
+  line-height: 1.4;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  font-family: 'Outfit', system-ui, sans-serif !important;  /* Untertitel immer sans, unabhängig vom Hauptzeile-Style */
+  font-weight: 500;
+  word-break: break-word;
+}
+
+/* Schwarzes Material → weißer Text (Kontrast) */
+.render-area[data-material="black"] .blanket-text {
+  color: #fafafa;
+}
+
+/* Foto optional, in Kreis-Form (Sternkarte-Pattern, Memory project_starmap_photo_upload_section.md) */
+.blanket-photo {
+  width: 30cqw;
+  aspect-ratio: 1;            /* Kreis: width = height */
+  border-radius: 50%;
+  overflow: hidden;
+  background: rgba(0, 0, 0, 0.05);
+  flex-shrink: 0;
+}
+.blanket-photo.shape-circle {
+  border-radius: 50%;
 }
 .blanket-photo img {
   width: 100%;
@@ -61,26 +102,30 @@
   object-fit: cover;
   display: block;
 }
-.blanket-photo__placeholder {
-  color: rgba(0, 0, 0, 0.6);
-  font-size: 13px;
-  font-family: 'Outfit', system-ui, sans-serif;
-  letter-spacing: 0.02em;
-  padding: 8px 20px;
-  text-align: center;
-  background: rgba(255, 255, 255, 0.85);
-  border-radius: 6px;
-  /* Lesbare Pille auf jeder Textur-Farbe (auch schwarz) */
-}
 
-/* Schwarze Material → Placeholder-Text auf hellem Pill bleibt dunkel,
- * aber etwas hellere Pill-BG-Transparenz für mehr Kontrast. */
-.render-area[data-material="black"] .blanket-photo__placeholder {
-  background: rgba(255, 255, 255, 0.92);
+/* Wenn Foto da → Layout: Hauptzeile oben, Foto mitte, Untertitel unten */
+.render-area[data-has-photo="true"] .blanket-frame {
+  /* Reihenfolge: Hauptzeile, Foto, Untertitel */
+}
+.render-area[data-has-photo="true"] .blanket-photo {
+  order: 2;
+}
+.render-area[data-has-photo="true"] .blanket-text {
+  display: contents;          /* Hauptzeile + Untertitel als direkte Frame-Children, sodass order greift */
+}
+.render-area[data-has-photo="true"] .blanket-text__hauptzeile {
+  order: 1;
+  text-align: center;
+  width: 100%;
+}
+.render-area[data-has-photo="true"] .blanket-text__untertitel {
+  order: 3;
+  text-align: center;
+  width: 100%;
 }
 
 /* =====================================================================
- * Mobile-Overrides — MUESSEN am Ende der Datei stehen.
+ * Mobile-Overrides — am Ende der Datei (CSS Source-Order matters)
  * ===================================================================== */
 @media (max-width: 900px) {
   .render-area {

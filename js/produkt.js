@@ -1,7 +1,5 @@
-/* Produkt-Tab + Layout-Tab Picker — Foto-Fußmatte V1.5
- * - Material-Picker (Caramel/Grau/Schwarz) im Layout-Tab
- * - Größen-Picker (70×50 / 140×90) im Produkt-Tab
- * - Cart-Btn als Preview-only (kein echter Cart bis Theme-Migration) */
+/* Layout-Tab Material-Picker + Produkt-Tab Größen-Picker + Cart-Btn-Preview.
+ * V1.6 FussmattenKING-Style: Text dominiert, Foto optional. */
 import { setState, state, SKU_MAP } from './state.js';
 
 const $materialLinks = document.querySelectorAll('#material-picker > li > a');
@@ -13,23 +11,19 @@ function fmtPrice(eur) {
 }
 
 function refreshPrices() {
-  // Pro Größen-Link den Preis aus SKU_MAP setzen
   $sizeLinks.forEach(link => {
     const size = link.dataset.size;
     const priceEl = link.querySelector('.size-price');
     const entry = SKU_MAP[size];
-    if (priceEl && entry) {
-      priceEl.textContent = fmtPrice(entry.price_eur);
-    }
+    if (priceEl && entry) priceEl.textContent = fmtPrice(entry.price_eur);
   });
-  // Header-Preis aus aktueller Größe
   if ($priceDisplay) {
     const cur = SKU_MAP[state.size] || SKU_MAP['70x50'];
     $priceDisplay.textContent = fmtPrice(cur.price_eur);
   }
 }
 
-/* Material-Picker (Layout-Tab) — Textur-Farbe der Fußmatte */
+/* Material-Picker (Layout-Tab) */
 $materialLinks.forEach(link => {
   link.addEventListener('click', e => {
     e.preventDefault();
@@ -38,25 +32,20 @@ $materialLinks.forEach(link => {
   });
 });
 
-/* Größen-Picker (Produkt-Tab) — wechselt SKU, Preis, und Frame-Aspect */
+/* Größen-Picker (Produkt-Tab) — wechselt SKU, Preis, Aspect */
 $sizeLinks.forEach(link => {
   link.addEventListener('click', e => {
     e.preventDefault();
     $sizeLinks.forEach(l => l.classList.toggle('current', l === link));
     setState({ size: link.dataset.size });
     refreshPrices();
-    /* Bei Größen-Wechsel ändert sich das Aspect (70×50 = 1.4, 140×90 ≈ 1.556).
-     * render.js setzt --blanket-aspect daraus.
-     * Wenn schon ein Foto gecroppt ist, müsste der User es neu zuschneiden —
-     * für V1 lassen wir's: object-fit:cover clipt das Foto, akzeptabler Default. */
   });
 });
 
-/* Initial-Preise */
 refreshPrices();
 
 /* Cart-Btn — V1 Preview-only.
- * Validation: ohne Foto öffnet ein Hinweis-Modal. */
+ * Validation: Hauptzeile muss da sein (Foto ist optional bei FussmattenKING-Style). */
 const $cartBtn = document.getElementById('cart-btn');
 const $noticeModal = document.getElementById('cart-no-photo-modal');
 const $noticeClose = document.getElementById('cart-no-photo-close');
@@ -68,12 +57,10 @@ function closeNoticeModal() { if ($noticeModal) $noticeModal.classList.remove('v
 if ($cartBtn) {
   $cartBtn.addEventListener('click', e => {
     e.preventDefault();
-    if (!state.photo_url) {
+    if (!state.hauptzeile || !state.hauptzeile.trim()) {
       openNoticeModal();
       return;
     }
-    /* Cart-Properties die im Live-Theme gesetzt würden — V1 nur in
-     * console.log + alert sichtbar. Wandert später in cart/add.js POST. */
     const skuEntry = SKU_MAP[state.size];
     const properties = {
       _provider: 'merchone',
@@ -83,23 +70,30 @@ if ($cartBtn) {
       _Photo_Config_JSON: JSON.stringify({
         material: state.material,
         size: state.size,
-        filter: state.filter,
+        hauptzeile: state.hauptzeile,
+        untertitel: state.untertitel,
+        text_font_style: state.text_font_style,
+        photo_url: state.photo_url ? '(present)' : null,
         crop_width: state.crop_width,
         crop_height: state.crop_height,
         natural_width: state.natural_width,
         natural_height: state.natural_height,
         print_px: skuEntry ? skuEntry.print_px : null,
       }),
-      _Product_Type: 'Foto-Fußmatte',
+      _Product_Type: 'Personalisierte Fußmatte',
       _Size: skuEntry ? skuEntry.label : state.size,
       _Material: state.material,
+      _Hauptzeile: state.hauptzeile,
+      _Untertitel: state.untertitel,
     };
     console.log('[Foto-Fußmatte] Cart-Properties (V1 Preview):', properties);
     alert(
       'Preview: Im Live-Shop würde hier der Cart-Add ausgelöst.\n\n' +
       'product_sku: ' + (properties._merchone_product_sku || '?') + '\n' +
       'material: ' + state.material + '\n' +
-      'size: ' + state.size
+      'size: ' + state.size + '\n' +
+      'hauptzeile: ' + state.hauptzeile + '\n' +
+      'untertitel: ' + state.untertitel
     );
   });
 }
@@ -114,12 +108,12 @@ if ($noticeCta) {
   $noticeCta.addEventListener('click', e => {
     e.preventDefault();
     closeNoticeModal();
-    const layoutTab = document.querySelector('.main__switcher > ul > li > a[data-tab="layout__wrapper"]');
-    if (layoutTab) layoutTab.click();
+    const textTab = document.querySelector('.main__switcher > ul > li > a[data-tab="text__wrapper"]');
+    if (textTab) textTab.click();
     setTimeout(() => {
-      const zone = document.getElementById('photo-upload-zone');
-      if (zone) zone.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    }, 100);
+      const input = document.getElementById('input-hauptzeile');
+      if (input) input.focus();
+    }, 200);
   });
 }
 document.addEventListener('keydown', e => {

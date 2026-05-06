@@ -1,11 +1,8 @@
-/* Reaktiver State + Subscriber-Pattern für den Foto-Fußmatten-Editor.
- * (V1.0–V1.4 war Foto-Decke; V1.5 Pivot zu Fußmatte — Decke kommt
- * später als Phase 2 mit Multi-Foto-Collage zurück.)
- *
- * setState({...}) feuert alle Subscriber, render.js zeichnet die DOM. */
+/* Reaktiver State + Subscriber-Pattern für den Personalisierte-Fußmatte-Editor.
+ * V1.6: FussmattenKING-Style Pivot — Text dominiert, Foto optional in Kreis. */
 
 export const state = {
-  // Foto
+  // Foto (optional, in Kreis-Form)
   photo_url: null,
   photo_url_original: null,
   photo_crop: null,
@@ -15,12 +12,17 @@ export const state = {
   crop_height: 1,
   filter: 'original',
 
-  // Material (3 Texturen)
+  // Material-Textur (3 Farben)
   material: 'caramel',         // 'caramel' | 'gray' | 'black'
 
-  // Größe & Aspect (Fußmatte hat per-Size unterschiedliche Aspects!)
+  // Text-Tab — 2 Zeilen statt 4 (FussmattenKING-Style)
+  hauptzeile: 'Willkommen',
+  untertitel: 'BEI FAMILIE MÜLLER',
+  text_font_style: 'script',   // 'script' | 'serif' | 'sans'
+
+  // Größe & Aspect (per-Size unterschiedlich!)
   size: '70x50',               // '70x50' | '140x90'
-  variant: 'standard',         // nur 'standard' (Premium-Rug existiert nicht)
+  variant: 'standard',
 };
 
 const subscribers = [];
@@ -32,28 +34,33 @@ export function setState(updates) {
   subscribers.forEach(fn => fn(state));
 }
 
-/* Merchone-SKU-Mapping für Fußmatten-Rugs (CPS = "Carpet Standard").
- * Aus Daten/merchone-catalog.md.
- * Print-Pixel @ 150 dpi inkl. 3 cm Bleed allseits (laut Print-Area-Guide).
- * Aspect = width/height der sichtbaren Fläche (nicht inkl. Bleed). */
 export const SKU_MAP = {
   '70x50':  {
-    sku: 'CPS0700501',
-    label: '70 × 50 cm',
-    aspect: 70 / 50,            // 1.4
-    print_px: [4488, 3307],
-    price_eur: 24.90,
+    sku: 'CPS0700501', label: '70 × 50 cm',
+    aspect: 70 / 50, print_px: [4488, 3307], price_eur: 24.90,
   },
   '140x90': {
-    sku: 'CPS1400901',
-    label: '140 × 90 cm',
-    aspect: 140 / 90,           // ≈ 1.556
-    print_px: [8622, 5669],
-    price_eur: 64.90,
+    sku: 'CPS1400901', label: '140 × 90 cm',
+    aspect: 140 / 90, print_px: [8622, 5669], price_eur: 64.90,
   },
 };
 
-/* Computed: aktueller Aspect aus state.size */
 export function currentAspect(s = state) {
   return (SKU_MAP[s.size] || SKU_MAP['70x50']).aspect;
 }
+
+/* Hauptzeile-Templates (Quick-Click-Buttons im Text-Tab) */
+export const HAUPTZEILE_TEMPLATES = [
+  'Hello',
+  'Willkommen',
+  'Herzlich Willkommen',
+  'Familie',
+  'Hier wohnen',
+];
+
+/* Font-Style-Definitionen (matching Mama-Pattern, Memory project_definitionsposter_status_2026_05_03.md) */
+export const FONT_STYLES = {
+  script: { font: "'parlare', cursive",                           weight: 400, label: 'Verspielt' },
+  serif:  { font: "'Playfair Display', Georgia, serif",           weight: 700, label: 'Elegant' },
+  sans:   { font: "'Outfit', system-ui, sans-serif",              weight: 700, label: 'Modern' },
+};

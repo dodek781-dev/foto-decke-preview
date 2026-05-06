@@ -4,16 +4,19 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="robots" content="noindex,nofollow">
-  <meta name="description" content="Distantlines Foto-Fußmatte Editor — Preview">
+  <meta name="description" content="Distantlines Personalisierte Fußmatte Editor — Preview">
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='80'%3E🟫%3C/text%3E%3C/svg%3E">
-  <title>Foto-Fußmatte Editor (Preview)</title>
+  <title>Personalisierte Fußmatte Editor (Preview)</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="preconnect" href="https://api.fontshare.com">
+  <link rel="preconnect" href="https://cdn.fontshare.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Playfair+Display:wght@400;700;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://use.typekit.net/sgc6idq.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.css">
-  <link rel="stylesheet" href="css/base.css?v=10">
-  <link rel="stylesheet" href="css/editor.css?v=10">
-  <link rel="stylesheet" href="css/render.css?v=10">
+  <link rel="stylesheet" href="css/base.css?v=11">
+  <link rel="stylesheet" href="css/editor.css?v=11">
+  <link rel="stylesheet" href="css/render.css?v=11">
 </head>
 <body>
   <header class="preview-topbar" aria-hidden="true">
@@ -35,9 +38,11 @@
   <div class="app">
     <section class="render-area" data-material="caramel" data-filter="original">
       <div class="blanket-frame" style="--blanket-aspect: 1.4;">
-        <div class="blanket-photo">
-          <div class="blanket-photo__placeholder">Foto hier hochladen &rarr;</div>
+        <div class="blanket-text">
+          <h2 class="blanket-text__hauptzeile">Willkommen</h2>
+          <p class="blanket-text__untertitel">BEI FAMILIE MÜLLER</p>
         </div>
+        <div class="blanket-photo shape-circle" style="display:none;"></div>
       </div>
     </section>
 
@@ -54,6 +59,18 @@
               </svg>
             </span>
             Layout
+          </a>
+        </li>
+        <li>
+          <a href="#" data-tab="text__wrapper">
+            <span>
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="4 7 4 4 20 4 20 7"/>
+                <line x1="9" y1="20" x2="15" y2="20"/>
+                <line x1="12" y1="4" x2="12" y2="20"/>
+              </svg>
+            </span>
+            Text
           </a>
         </li>
         <li>
@@ -74,18 +91,34 @@
       <!-- TAB 1: LAYOUT                                -->
       <!-- ============================================ -->
       <div class="layout__wrapper">
+
+        <!-- Material-Picker (3 Texturen) -->
         <div class="elem__picker">
-          <p>Dein Foto</p>
-          <label class="photo-upload-zone" id="photo-upload-zone">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-              <polyline points="17 8 12 3 7 8"/>
-              <line x1="12" y1="3" x2="12" y2="15"/>
-            </svg>
-            <p>Klicken oder Foto hierher ziehen</p>
-            <span class="upload-hint">JPG, PNG oder HEIC &mdash; max. 20 MB</span>
+          <p>Material-Farbe</p>
+          <ul class="three material-picker" id="material-picker">
+            <li><a href="#" class="current" data-material="caramel">
+              <span class="material-swatch" style="background:#c79661;"></span>
+              <span class="material-label">Caramel</span>
+            </a></li>
+            <li><a href="#" data-material="gray">
+              <span class="material-swatch" style="background:#9a9a9a;"></span>
+              <span class="material-label">Grau</span>
+            </a></li>
+            <li><a href="#" data-material="black">
+              <span class="material-swatch" style="background:#1a1a1a;"></span>
+              <span class="material-label">Schwarz</span>
+            </a></li>
+          </ul>
+        </div>
+
+        <!-- Foto-Upload (optional, kompakter Distantlines-Standard-Button statt Drop-Zone) -->
+        <div class="elem__picker">
+          <p>Foto (optional)</p>
+          <label class="photo-upload-button" id="photo-upload-zone">
+            <span>Foto hochladen</span>
             <input type="file" id="photo-file-input" accept="image/jpeg,image/png,image/heic,image/heif">
           </label>
+          <p class="photo-upload-hint">JPG, PNG oder HEIC &mdash; max. 20 MB. Wird kreisförmig auf der Fußmatte zentriert.</p>
 
           <div class="photo-upload-status" id="photo-upload-status"></div>
 
@@ -105,37 +138,48 @@
           </button>
         </div>
 
-        <!-- Material-Picker (3 Texturen) -->
+        <!-- Weiter-Button → Text-Tab -->
+        <div class="weiter-nav">
+          <a href="#" class="weiter-btn" data-target-tab="text__wrapper">Weiter zum Text</a>
+        </div>
+      </div>
+
+      <!-- ============================================ -->
+      <!-- TAB 2: TEXT                                  -->
+      <!-- ============================================ -->
+      <div class="text__wrapper" style="display:none;">
+
         <div class="elem__picker">
-          <p>Material-Farbe</p>
-          <ul class="three material-picker" id="material-picker">
-            <li><a href="#" class="current" data-material="caramel">
-              <span class="media"><span class="img" style="background:#c79661;border-radius:6px;"></span></span>
-              Caramel
-            </a></li>
-            <li><a href="#" data-material="gray">
-              <span class="media"><span class="img" style="background:#9a9a9a;border-radius:6px;"></span></span>
-              Grau
-            </a></li>
-            <li><a href="#" data-material="black">
-              <span class="media"><span class="img" style="background:#1a1a1a;border-radius:6px;"></span></span>
-              Schwarz
-            </a></li>
-          </ul>
+          <p>Hauptzeile</p>
+          <input type="text" id="input-hauptzeile" maxlength="60" placeholder="z.B. Willkommen, Hello, Familie Müller">
+          <div class="hauptzeile-templates" id="hauptzeile-templates"></div>
         </div>
 
-        <!-- Weiter-Button -->
+        <div class="elem__picker">
+          <p>Untertitel</p>
+          <input type="text" id="input-untertitel" maxlength="80" placeholder="z.B. Familienname oder Vornamen mit · getrennt">
+          <p class="input-hint">Tipp: Mit · (Mittelpunkt) trennen — z.B. „NINA · UWE · EMILIA · PAUL".</p>
+        </div>
+
+        <div class="elem__picker">
+          <p>Schriftstil</p>
+          <div class="text-font-row">
+            <button type="button" class="text-font-btn" data-style="sans">Modern</button>
+            <button type="button" class="text-font-btn" data-style="serif">Elegant</button>
+            <button type="button" class="text-font-btn current" data-style="script">Verspielt</button>
+          </div>
+        </div>
+
         <div class="weiter-nav">
           <a href="#" class="weiter-btn" data-target-tab="produkt__wrapper">Weiter zum Produkt</a>
         </div>
       </div>
 
       <!-- ============================================ -->
-      <!-- TAB 2: PRODUKT                               -->
+      <!-- TAB 3: PRODUKT                               -->
       <!-- ============================================ -->
       <div class="produkt__wrapper" style="display:none;">
 
-        <!-- Größe -->
         <div class="elem__picker">
           <p>Gr&ouml;&szlig;e</p>
           <div class="size__picker" id="size-picker">
@@ -154,7 +198,7 @@
           </div>
           <div class="benefits-box">
             <ul class="benefits-list">
-              <li><svg width="14" height="14" viewBox="0 0 14 14"><path d="M5.5 9.5L2.5 6.5L3.2 5.8L5.5 8.1L10.8 2.8L11.5 3.5L5.5 9.5Z" fill="#4CAF50"/></svg>Vollfl&auml;chig bedruckt &ndash; dein Foto auf der ganzen Fu&szlig;matte</li>
+              <li><svg width="14" height="14" viewBox="0 0 14 14"><path d="M5.5 9.5L2.5 6.5L3.2 5.8L5.5 8.1L10.8 2.8L11.5 3.5L5.5 9.5Z" fill="#4CAF50"/></svg>Schlingen-Velours, vollfl&auml;chig bedruckt</li>
               <li><svg width="14" height="14" viewBox="0 0 14 14"><path d="M5.5 9.5L2.5 6.5L3.2 5.8L5.5 8.1L10.8 2.8L11.5 3.5L5.5 9.5Z" fill="#4CAF50"/></svg>Rutschfeste Gummi-Unterseite</li>
               <li><svg width="14" height="14" viewBox="0 0 14 14"><path d="M5.5 9.5L2.5 6.5L3.2 5.8L5.5 8.1L10.8 2.8L11.5 3.5L5.5 9.5Z" fill="#4CAF50"/></svg>Produktion in Europa</li>
               <li><svg width="14" height="14" viewBox="0 0 14 14"><path d="M5.5 9.5L2.5 6.5L3.2 5.8L5.5 8.1L10.8 2.8L11.5 3.5L5.5 9.5Z" fill="#4CAF50"/></svg>F&uuml;r drinnen und drau&szlig;en</li>
@@ -162,7 +206,6 @@
           </div>
         </div>
 
-        <!-- Bottom Controls -->
         <div class="bottom__controls">
           <div class="desc">
             <p>Preis</p>
@@ -186,7 +229,7 @@
         <h3>Bildqualit&auml;t</h3>
         <button type="button" class="quality-modal-close" id="photo-quality-modal-close" aria-label="Schließen">&times;</button>
       </div>
-      <p class="quality-modal-intro">L&auml;dst du ein Bild mit niedriger Aufl&ouml;sung hoch, kann der Druck unscharf wirken. Hier siehst du, welche Fu&szlig;matten-Gr&ouml;&szlig;en mit deinem aktuellen Foto in voller Sch&auml;rfe gedruckt werden k&ouml;nnen.</p>
+      <p class="quality-modal-intro">L&auml;dst du ein Bild mit niedriger Aufl&ouml;sung hoch, kann der Druck unscharf wirken.</p>
       <ul class="quality-size-list" id="photo-quality-size-list"></ul>
     </div>
   </div>
@@ -206,21 +249,21 @@
     </div>
   </div>
 
-  <!-- Hinweis-Modal: Cart ohne Foto-Upload -->
+  <!-- Hinweis-Modal: Cart ohne Foto/Text -->
   <div class="notice-modal-backdrop" id="cart-no-photo-modal">
     <div class="notice-modal" role="dialog" aria-labelledby="cart-no-photo-title" aria-modal="true">
       <div class="notice-modal-header">
         <h3 id="cart-no-photo-title">Fast geschafft</h3>
         <button type="button" class="notice-modal-close" id="cart-no-photo-close" aria-label="Schließen">&times;</button>
       </div>
-      <p class="notice-modal-intro">Lade noch dein Lieblingsfoto hoch, damit deine Fußmatte wirklich persönlich wird. Es dauert nur einen Moment.</p>
+      <p class="notice-modal-intro">Gib mindestens eine Hauptzeile ein, damit deine Fußmatte personalisiert werden kann.</p>
       <div class="notice-modal-actions">
-        <a href="#" class="notice-modal-cta" id="cart-no-photo-cta">Foto hochladen</a>
+        <a href="#" class="notice-modal-cta" id="cart-no-photo-cta">Zum Text-Tab</a>
       </div>
     </div>
   </div>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.js"></script>
-  <script type="module" src="js/main.js?v=10"></script>
+  <script type="module" src="js/main.js?v=11"></script>
 </body>
 </html>
