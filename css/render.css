@@ -92,14 +92,16 @@
 }
 
 /* Foto-Slots (Kreis-Form, Sternkarte-Pattern). V1.7.2 mit !important
- * gegen Layout-Engine-Auto-Sizing. */
+ * gegen Layout-Engine-Auto-Sizing. V1.7.11: schwarzer Ring um die Photos
+ * (Pet-Printed-Style) via box-shadow — kein Layout-Impact. */
 .blanket-photo,
 .blanket-photo.shape-circle {
   aspect-ratio: 1 !important;            /* Kreis: width = height */
   border-radius: 50% !important;
   overflow: hidden !important;
   background: rgba(0, 0, 0, 0.05);
-  flex: 0 0 auto !important;             /* kein flex-shrink, kein flex-grow */
+  flex: 0 0 auto !important;
+  box-shadow: 0 0 0 0.7cqw #000;          /* schwarzer Ring, ~4-5px Desktop, matcht Pet-Printed-Optik */
 }
 .blanket-photo img {
   width: 100% !important;
