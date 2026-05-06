@@ -12,13 +12,20 @@
   overflow: hidden;
 }
 
+/* Frame-Pattern 1:1 aus distantlines/assets/photo.css:60-110 (Fotoposter):
+ * EXPLIZITE width + height, kein aspect-ratio Property.
+ * Querformat: width = lange Kante = base; height = base / aspect.
+ * Mobile koppelt beide Achsen an `min(... , 92vw)` damit das Aspect bei
+ * schmalem Viewport erhalten bleibt (sonst würde max-width die Width
+ * cappen ohne Height proportional zu schrumpfen → verzerrtes Aspect). */
 .blanket-frame {
-  --blanket-aspect: 1.4;
+  --blanket-aspect: 1.4;            /* width/height — JS setzt pro Größe */
+  --frame-base: min(78vh, 680px);   /* feste Hoehe, viewport-responsive */
   position: relative;
-  height: min(70vh, 600px);
-  aspect-ratio: var(--blanket-aspect);
+  width:  var(--frame-base);
+  height: calc(var(--frame-base) / var(--blanket-aspect));
   max-width: 90vw;
-  max-height: 80vh;
+  max-height: 78vh;
   background: #fafaf8;
   background-size: cover;
   background-position: center;
@@ -28,10 +35,10 @@
     0 14px 40px rgba(0, 0, 0, 0.18),
     0 4px 12px rgba(0, 0, 0, 0.08);
 
-  /* Container-Type für cqw-Schriftskalierung — Text proportional zur Mattengröße */
+  /* Container-Type für cqw-Schriftskalierung */
   container-type: inline-size;
 
-  /* Inneres Layout: Text + optional Foto, vertikal zentriert */
+  /* Inneres Layout */
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -126,6 +133,8 @@
 
 /* =====================================================================
  * Mobile-Overrides — am Ende der Datei (CSS Source-Order matters)
+ * Frame-Werte 1:1 aus distantlines/assets/photo.css:1062-1085
+ * (Fotoposter Querformat-Mobile-Block).
  * ===================================================================== */
 @media (max-width: 900px) {
   .render-area {
@@ -135,8 +144,15 @@
     overflow: visible;
     padding: 24px 12px 60px;
   }
+}
+@media (max-width: 767px) {
+  /* Aspect-Ratio-Korrektur: width und height beide an `min(... , 92vw)`
+   * koppeln, sonst cappt max-width die Width ohne dass Height mitschrumpft
+   * → Querformat sieht fast quadratisch aus (User-Bug-Report 2026-05-06). */
   .blanket-frame {
-    height: min(50vh, 420px);
+    --frame-base: min(62vh, 520px);
     max-width: 92vw;
+    width:  min(var(--frame-base), 92vw);
+    height: calc(min(var(--frame-base), 92vw) / var(--blanket-aspect));
   }
 }
