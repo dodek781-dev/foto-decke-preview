@@ -204,6 +204,11 @@
     align-items: flex-start;
     overflow: visible;
     padding: 24px 12px 60px;
+    /* Mobile-Background-Mockup (Holzboden mit Eingangstür-Look).
+     * NICHT Teil der Druckdatei — nur Editor-Visual-Kontext. */
+    background-image: url('../assets/editor-bg-mobile.jpg');
+    background-size: cover;
+    background-position: center;
   }
 }
 @media (max-width: 767px) {
