@@ -9,7 +9,7 @@
   height: 100%;
   /* Desktop-Editor-Background-Mockup (Hellholz-Eingangstür, 3:2).
    * NICHT Teil der Druckdatei. Mobile-Override siehe @media-Block. */
-  background: #f4f2ed url('../assets/editor-bg-desktop.jpg') 50% 60% / 120% auto no-repeat;
+  background: #f4f2ed url('../assets/editor-bg-desktop.jpg') 50% 15% / 120% auto no-repeat;
   padding: 20px 20px 60px;
   overflow: hidden;
 }
@@ -211,7 +211,7 @@
      * Position 50% 0 zeigt Tür oben + Boden runter zum Frame. */
     background-image: url('../assets/editor-bg-mobile.jpg');
     background-size: 115% auto;
-    background-position: 50% 60%;
+    background-position: 50% 15%;
   }
 }
 @media (max-width: 767px) {
