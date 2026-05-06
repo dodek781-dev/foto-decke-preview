@@ -109,18 +109,13 @@
   border-radius: 50% !important;          /* Bild selbst auch rund (Sicherheits-Override) */
 }
 
-/* Foto-Größen — V1.7.4-Werte (1-Foto 45cqw, 2-Foto 32cqw je Slot).
- * 32cqw bei 2-Foto matched geometrisch in 1-Foto-Padding (8cqw je Seite):
- *   2 × 32cqw + 4cqw Gap = 68cqw needed
- *   100cqw Frame - 16cqw Padding = 84cqw available
- *   68 < 84 → 16cqw Atemraum, kein Wrap. */
-.render-area[data-photo-count="1"] .blanket-photo {
-  width: 45cqw !important;
-  height: 45cqw !important;
-}
-.render-area[data-photo-count="2"] .blanket-photo {
-  width: 32cqw !important;
-  height: 32cqw !important;
+/* Foto-Größen — beide Layouts uniform 40cqw je Slot.
+ * Math: 16cqw Padding + 80cqw Photos + 2cqw Gap = 98cqw, passt in 100cqw
+ * Frame mit 2cqw Reserve. 40cqw ist max-möglich für 2 Photos nebeneinander
+ * mit identischem 1-Foto-Padding. Beide Modi rendern dann gleich. */
+.blanket-photo {
+  width: 40cqw !important;
+  height: 40cqw !important;
 }
 
 /* Wenn min. ein Foto da → Layout: Hauptzeile oben, Foto(s) mitte, Untertitel unten */
