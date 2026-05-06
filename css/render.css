@@ -199,16 +199,17 @@
  * ===================================================================== */
 @media (max-width: 900px) {
   .render-area {
-    min-height: auto;
+    min-height: 60vh;            /* Mehr Höhe damit Background-Mockup sichtbar wird */
     height: auto;
-    align-items: flex-start;
+    align-items: flex-end;        /* Frame UNTEN am "Boden" platzieren */
     overflow: visible;
-    padding: 24px 12px 60px;
+    padding: 24px 12px 16px;      /* schmaleres Bottom-Padding damit Frame nah am Boden sitzt */
     /* Mobile-Background-Mockup (Holzboden mit Eingangstür-Look).
-     * NICHT Teil der Druckdatei — nur Editor-Visual-Kontext. */
+     * NICHT Teil der Druckdatei — nur Editor-Visual-Kontext.
+     * Position 50% 0 zeigt Tür oben + Boden runter zum Frame. */
     background-image: url('../assets/editor-bg-mobile.jpg');
     background-size: cover;
-    background-position: center;
+    background-position: 50% 0%;
   }
 }
 @media (max-width: 767px) {
