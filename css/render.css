@@ -38,12 +38,13 @@
   /* Container-Type für cqw-Schriftskalierung */
   container-type: inline-size;
 
-  /* Inneres Layout */
+  /* Inneres Layout — padding-horizontal knapp damit zwei 45cqw-Photos
+   * nebeneinander passen (90cqw + 2*4cqw padding + 2cqw gap = 100cqw) */
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 6cqw 8cqw;
+  padding: 6cqw 4cqw;
   gap: 4cqw;
 }
 
@@ -109,15 +110,11 @@
   border-radius: 50% !important;          /* Bild selbst auch rund (Sicherheits-Override) */
 }
 
-/* Foto-Größen — matched Pet-Printed-Vergleich (Foto ~45% der Frame-Höhe).
- * !important gegen Browser-Auto-Width im flex-Layout. */
-.render-area[data-photo-count="1"] .blanket-photo {
+/* Foto-Größe identisch in 1- und 2-Foto-Layout (User-Wunsch: bei 2 Fotos
+ * sollen die Photos NICHT kleiner werden als beim Einzelfoto). */
+.blanket-photo {
   width: 45cqw !important;
   height: 45cqw !important;
-}
-.render-area[data-photo-count="2"] .blanket-photo {
-  width: 32cqw !important;
-  height: 32cqw !important;
 }
 
 /* Wenn min. ein Foto da → Layout: Hauptzeile oben, Foto(s) mitte, Untertitel unten */
@@ -160,14 +157,14 @@
   /* Frame bleibt column, aber wir positionieren die 2 Photos via gap in
    * einer horizontal-spread-Logik. */
 }
-/* Beide Slots im 2-Foto-Modus auf gleichen flex-order, mit gap-Spacing. */
+/* Beide Slots im 2-Foto-Modus auf gleichen flex-order, kleiner Gap. */
 .render-area[data-photo-count="2"] .blanket-photo[data-slot="1"] {
   order: 2;
-  margin-right: 2.5cqw;
+  margin-right: 1cqw;
 }
 .render-area[data-photo-count="2"] .blanket-photo[data-slot="2"] {
   order: 2;
-  margin-left: 2.5cqw;
+  margin-left: 1cqw;
 }
 /* Damit beide Slots auf einer Linie stehen, wechseln wir den Frame-Direction-
  * Hack: wir benutzen flex-wrap und einen invisible "row-break" zwischen
