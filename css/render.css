@@ -157,25 +157,15 @@
   /* Frame bleibt column, aber wir positionieren die 2 Photos via gap in
    * einer horizontal-spread-Logik. */
 }
-/* 2-Foto-Modus: Photos nebeneinander mit kleinem Gap, Frame-Padding/Texte
- * verkleinert damit 45cqw Photos vertikal in den Querformat-Frame passen. */
-.render-area[data-photo-count="2"] .blanket-frame {
-  padding: 4cqw 2cqw;
-  gap: 2cqw;
-}
-.render-area[data-photo-count="2"] .blanket-text__hauptzeile {
-  font-size: 8cqw;
-}
-.render-area[data-photo-count="2"] .blanket-text__untertitel {
-  font-size: 2.5cqw;
-}
+/* 2-Foto-Modus: Photos nebeneinander, sonst identische Padding/Texte/Gaps
+ * wie 1-Foto-Layout (User-Anweisung 2026-05-06). */
 .render-area[data-photo-count="2"] .blanket-photo[data-slot="1"] {
   order: 2;
-  margin-right: 1cqw;
+  margin-right: 2cqw;
 }
 .render-area[data-photo-count="2"] .blanket-photo[data-slot="2"] {
   order: 2;
-  margin-left: 1cqw;
+  margin-left: 2cqw;
 }
 /* Damit beide Slots auf einer Linie stehen, wechseln wir den Frame-Direction-
  * Hack: wir benutzen flex-wrap und einen invisible "row-break" zwischen
