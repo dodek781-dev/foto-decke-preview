@@ -1,22 +1,28 @@
 /* Reaktiver State für Personalisierte-Fußmatte-Editor.
  * V1.7: Optional 2 Fotos nebeneinander + kreisförmiger Cropper. */
 
+/* Default-Mockup — Pattern wie Distantlines Foto-Poster / Citymap / Starmap.
+ * 1:1 Kopie aus distantlines/assets/photo-mockup-default.jpg (1000×1500 px,
+ * Familienfoto). Bei Page-Load sofort sichtbar; sobald User eigenes Foto
+ * hochlädt, wird es ersetzt. */
+const DEFAULT_PHOTO = 'assets/photo-mockup-default.jpg';
+
 export const state = {
-  // Foto 1 (immer da wenn photo_count >= 1)
-  photo_url: null,
+  // Foto 1 (immer da)
+  photo_url: DEFAULT_PHOTO,
   photo_url_original: null,
   photo_crop: null,
-  natural_width: 0,
-  natural_height: 0,
+  natural_width: 1000,
+  natural_height: 1500,
   crop_width: 1,
   crop_height: 1,
 
-  // Foto 2 (nur sichtbar wenn photo_count == 2)
-  photo2_url: null,
+  // Foto 2 (nur sichtbar wenn photo_count == 2) — auch Default-Mockup
+  photo2_url: DEFAULT_PHOTO,
   photo2_url_original: null,
   photo2_crop: null,
-  natural_width_2: 0,
-  natural_height_2: 0,
+  natural_width_2: 1000,
+  natural_height_2: 1500,
   crop_width_2: 1,
   crop_height_2: 1,
 
