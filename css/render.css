@@ -91,31 +91,33 @@
   color: #fafafa;
 }
 
-/* Foto-Slots (Kreis-Form, Sternkarte-Pattern). V1.7 mit 2-Slot-Support. */
-.blanket-photo {
-  aspect-ratio: 1;            /* Kreis: width = height */
-  border-radius: 50%;
-  overflow: hidden;
-  background: rgba(0, 0, 0, 0.05);
-  flex-shrink: 0;
-}
+/* Foto-Slots (Kreis-Form, Sternkarte-Pattern). V1.7.2 mit !important
+ * gegen Layout-Engine-Auto-Sizing. */
+.blanket-photo,
 .blanket-photo.shape-circle {
-  border-radius: 50%;
+  aspect-ratio: 1 !important;            /* Kreis: width = height */
+  border-radius: 50% !important;
+  overflow: hidden !important;
+  background: rgba(0, 0, 0, 0.05);
+  flex: 0 0 auto !important;             /* kein flex-shrink, kein flex-grow */
 }
 .blanket-photo img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  display: block;
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: cover !important;
+  display: block !important;
+  border-radius: 50% !important;          /* Bild selbst auch rund (Sicherheits-Override) */
 }
 
 /* Foto-Größen — matched Pet-Printed-Vergleich (Foto ~45% der Frame-Höhe).
- * V1.7.1: deutlich größer als V1.7 (war 30/22cqw — zu klein). */
+ * !important gegen Browser-Auto-Width im flex-Layout. */
 .render-area[data-photo-count="1"] .blanket-photo {
-  width: 45cqw;
+  width: 45cqw !important;
+  height: 45cqw !important;
 }
 .render-area[data-photo-count="2"] .blanket-photo {
-  width: 32cqw;
+  width: 32cqw !important;
+  height: 32cqw !important;
 }
 
 /* Wenn min. ein Foto da → Layout: Hauptzeile oben, Foto(s) mitte, Untertitel unten */
