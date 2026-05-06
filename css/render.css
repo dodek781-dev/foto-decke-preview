@@ -3,12 +3,14 @@
 
 .render-area {
   display: flex;
-  align-items: center;
+  align-items: flex-end;        /* Frame unten am "Boden" wie Mobile */
   justify-content: center;
   min-height: 100vh;
   height: 100%;
-  background: #f4f2ed;
-  padding: 20px;
+  /* Desktop-Editor-Background-Mockup (Hellholz-Eingangstür, 3:2).
+   * NICHT Teil der Druckdatei. Mobile-Override siehe @media-Block. */
+  background: #f4f2ed url('../assets/editor-bg-desktop.jpg') 50% 0% / cover no-repeat;
+  padding: 20px 20px 60px;
   overflow: hidden;
 }
 
