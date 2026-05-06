@@ -109,15 +109,11 @@
   border-radius: 50% !important;          /* Bild selbst auch rund (Sicherheits-Override) */
 }
 
-/* Foto-Größen — 1-Foto Pet-Printed-Niveau (45cqw), 2-Foto kleiner damit
- * sie nebeneinander passen (sonst wrappt's vertikal). */
-.render-area[data-photo-count="1"] .blanket-photo {
-  width: 45cqw !important;
-  height: 45cqw !important;
-}
-.render-area[data-photo-count="2"] .blanket-photo {
-  width: 32cqw !important;
-  height: 32cqw !important;
+/* Foto-Größen identisch: 1 + 2 Photos beide 30cqw je Slot.
+ * (V1.7.0-Größe, User: "Einzelfoto war OK bevor ich's vergrößert hatte") */
+.blanket-photo {
+  width: 30cqw !important;
+  height: 30cqw !important;
 }
 
 /* Wenn min. ein Foto da → Layout: Hauptzeile oben, Foto(s) mitte, Untertitel unten */
