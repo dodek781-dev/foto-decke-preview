@@ -203,7 +203,7 @@
     height: auto;
     align-items: flex-end;        /* Frame UNTEN am "Boden" platzieren */
     overflow: visible;
-    padding: 24px 12px 16px;      /* schmaleres Bottom-Padding damit Frame nah am Boden sitzt */
+    padding: 24px 12px 60px;      /* mehr Bottom-Padding → Frame steigt höher vom Boden */
     /* Mobile-Background-Mockup (Holzboden mit Eingangstür-Look).
      * NICHT Teil der Druckdatei — nur Editor-Visual-Kontext.
      * Position 50% 0 zeigt Tür oben + Boden runter zum Frame. */
