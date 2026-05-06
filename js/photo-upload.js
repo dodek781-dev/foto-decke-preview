@@ -1,17 +1,17 @@
-/* T4: Foto-Upload mit Cropper.js
+/* Foto-Upload mit Cropper.js — V1.7 mit 2-Slot-Support + kreisförmigem Crop.
  *
- * Pattern-Vorbild: distantlines/assets/photo.js (Stadt-/Sternkarten/Foto-Editor).
- * Hier vereinfacht fuer Standalone-Static-Site:
- *   - Kein S3-Upload, kein Server-Print (Preview-Only).
- *   - Kein HEIC-Decode-Pfad — Browser handelt's via accept best-effort.
- *   - Crop-Modal-Aspect wird live aus .poster-photo gemessen statt hartkodiert,
- *     analog zu photo.js Z. 639–646 (CSS-Padding-Quirk + flex-Ratio sind
- *     instabil in Math, DOM ist Source of Truth).
- *   - 2400px Pre-Resize VOR Cropper-Init verhindert OOM bei 24-MP Smartphone-
- *     Fotos (Memory: project_photo_resize_before_cropper.md).
+ * - Crop ist mathematisch quadratisch (aspectRatio: 1), Cropper-Modal-CSS
+ *   maskiert .cropper-view-box / .cropper-face als Kreis (border-radius: 50%)
+ *   damit der User visuell kreisförmig zuschneidet — Render-Foto ist eh in
+ *   .blanket-photo.shape-circle Container mit border-radius: 50%.
+ * - 2 Foto-Slots via data-slot Attribute. pendingSlot tracked welcher gerade
+ *   gecroppt wird.
  *
- * State-Integration: setState({ photo_url }) -> render.js zeigt das Foto in
- * .poster-photo > img an.
+ * State-Felder pro Slot:
+ *   Slot 1: photo_url, photo_url_original, natural_width, natural_height,
+ *           crop_width, crop_height
+ *   Slot 2: photo2_url, photo2_url_original, natural_width_2, natural_height_2,
+ *           crop_width_2, crop_height_2
  */
 
 import { state, setState } from './state.js';
@@ -21,42 +21,41 @@ const MAX_SIDE_PX = 2400;
 
 let cropperInstance = null;
 let pendingFileName = null;
+let pendingSlot = 1;            // welcher Foto-Slot wird gerade gecroppt
+
+// Cropper-Modal-Refs (geshared)
+let cropperBackdrop, cropperImage, applyBtn, cancelBtn, uploadStatusEl;
 
 // -------------------------------------------------------------------
-// DOM-Refs (lazy — nach DOMContentLoaded gesetzt)
+// Status-Anzeige
 // -------------------------------------------------------------------
-let uploadZone, fileInput, changeRow, nameDisplay, uploadStatus,
-    cropperBackdrop, cropperImage, applyBtn, cancelBtn;
-
-// -------------------------------------------------------------------
-// Upload-Status (Bild wird hochgeladen…) mit Progress-Bar
-// -------------------------------------------------------------------
-function showUploadStatus(state, label, pct) {
-  if (!uploadStatus) return;
-  uploadStatus.className = 'photo-upload-status is-' + state;
+function showUploadStatus(slot, state, label, pct) {
+  const el = document.querySelector(`.photo-upload-status[data-slot="${slot}"]`)
+          || document.getElementById('photo-upload-status');
+  if (!el) return;
+  el.className = 'photo-upload-status is-' + state;
+  el.dataset.slot = String(slot);
   if (state === 'uploading') {
     const safePct = Math.max(0, Math.min(100, Math.round(pct || 0)));
-    uploadStatus.innerHTML =
+    el.innerHTML =
       '<div>' + label + ' ' + safePct + '%</div>' +
       '<span class="progress-bar"><span class="progress-bar-fill" style="width:' + safePct + '%"></span></span>';
   } else {
-    uploadStatus.textContent = label;
+    el.textContent = label;
   }
 }
-function hideUploadStatus() {
-  if (!uploadStatus) return;
-  uploadStatus.className = 'photo-upload-status';
-  uploadStatus.innerHTML = '';
+function hideUploadStatus(slot) {
+  const el = document.querySelector(`.photo-upload-status[data-slot="${slot}"]`)
+          || document.getElementById('photo-upload-status');
+  if (!el) return;
+  el.className = 'photo-upload-status';
+  el.innerHTML = '';
 }
 
 // -------------------------------------------------------------------
-// Pre-Cropper Resize: schrumpft DataURL auf max. MAX_SIDE_PX Long-Side.
-// Verhindert Renderer-Crash (Chrome OOM) bei grossen Smartphone-Fotos.
+// Pre-Cropper Resize: max MAX_SIDE_PX Long-Side
 // -------------------------------------------------------------------
 function resizeDataUrlIfTooLarge(dataUrl, maxSide) {
-  /* Returnt { dataUrl, originalWidth, originalHeight } — Original-Dimensionen
-   * werden gemerkt, damit DPI-Quality-Calc auf den echten Pixeln basiert
-   * (nicht auf der downscaled 2400px-Variante). */
   return new Promise((resolve, reject) => {
     const img = new Image();
     img.onload = () => {
@@ -85,124 +84,128 @@ function resizeDataUrlIfTooLarge(dataUrl, maxSide) {
 }
 
 // -------------------------------------------------------------------
-// Aspect-Ratio aus dem DOM messen — exakt wie photo.js Z. 639.
-// Editor und Crop muessen 1:1 sein, sonst clipt object-fit:cover spaeter.
+// Slot-spezifische State-Schreibung
 // -------------------------------------------------------------------
-function measureCropAspect() {
-  const el = document.querySelector('.blanket-photo');
-  if (!el) return 100 / 70; // Fallback: Decken-Querformat (~1.4286)
-  const rect = el.getBoundingClientRect();
-  if (rect.width <= 0 || rect.height <= 0) return 100 / 70;
-  return rect.width / rect.height;
+function writeOriginalToState(slot, dataUrl, naturalW, naturalH) {
+  if (slot === 2) {
+    setState({
+      photo2_url_original: dataUrl,
+      natural_width_2: naturalW,
+      natural_height_2: naturalH,
+    });
+  } else {
+    setState({
+      photo_url_original: dataUrl,
+      natural_width: naturalW,
+      natural_height: naturalH,
+    });
+  }
+}
+function writeCroppedToState(slot, dataUrl, cropW, cropH) {
+  if (slot === 2) {
+    setState({
+      photo2_url: dataUrl,
+      crop_width_2: cropW,
+      crop_height_2: cropH,
+    });
+  } else {
+    setState({
+      photo_url: dataUrl,
+      crop_width: cropW,
+      crop_height: cropH,
+    });
+  }
+}
+function getOriginalForSlot(slot) {
+  return slot === 2 ? state.photo2_url_original : state.photo_url_original;
 }
 
 // -------------------------------------------------------------------
-// Upload-UI-State: zwischen Dropzone und "Foto-Name + Buttons" wechseln.
+// UI-State pro Slot
 // -------------------------------------------------------------------
-function showUploadedState(filename) {
-  uploadZone.style.display = 'none';
-  changeRow.classList.add('visible');
-  if (nameDisplay) nameDisplay.textContent = filename || 'Foto.jpg';
-  /* Qualitäts-Btn wird von quality.js gesteuert — basiert auf natural_width/-height */
-}
-
-function showInitialState() {
-  uploadZone.style.display = '';
-  changeRow.classList.remove('visible');
-  if (nameDisplay) nameDisplay.textContent = '';
+function setSlotUploadedUI(slot, hasPhoto) {
+  const slotEl = document.querySelector(`.photo-slot[data-slot="${slot}"]`);
+  if (!slotEl) return;
+  if (hasPhoto) {
+    slotEl.classList.add('has-photo');
+  } else {
+    slotEl.classList.remove('has-photo');
+  }
 }
 
 // -------------------------------------------------------------------
-// File-Picking + Drag-Drop
+// File-Handling
 // -------------------------------------------------------------------
-function handleFile(file) {
+function handleFile(file, slot) {
   if (!file) return;
-
   const isHeic = /\.heic$|\.heif$/i.test(file.name) ||
                  file.type === 'image/heic' || file.type === 'image/heif';
-
   if (!isHeic && !ACCEPT_MIME.includes(file.type)) {
-    alert('Dateityp nicht unterstuetzt. Bitte JPG, PNG oder HEIC.');
+    alert('Dateityp nicht unterstützt. Bitte JPG, PNG oder HEIC.');
     return;
   }
-
   pendingFileName = file.name;
-
-  /* Status anzeigen — FileReader-Progress feedet Live-Pct */
-  showUploadStatus('uploading', 'Bild wird hochgeladen…', 0);
+  pendingSlot = slot;
+  showUploadStatus(slot, 'uploading', 'Bild wird hochgeladen…', 0);
 
   const reader = new FileReader();
   reader.onprogress = (ev) => {
     if (ev.lengthComputable) {
-      // FileReader = ~50% des Gesamt-Progress (2. Hälfte ist Resize+Decode)
       const pct = (ev.loaded / ev.total) * 50;
-      showUploadStatus('uploading', 'Bild wird hochgeladen…', pct);
+      showUploadStatus(slot, 'uploading', 'Bild wird hochgeladen…', pct);
     }
   };
   reader.onload = (ev) => {
-    showUploadStatus('uploading', 'Bild wird hochgeladen…', 60);
-    // Vor Cropper-Init auf max 2400px Long-Side downscalen — sonst killt
-    // Chrome den Renderer bei Pan/Zoom auf grossen Fotos (OOM).
+    showUploadStatus(slot, 'uploading', 'Bild wird hochgeladen…', 60);
     resizeDataUrlIfTooLarge(ev.target.result, MAX_SIDE_PX)
       .then((res) => {
         const { dataUrl, originalWidth, originalHeight } = res;
-        showUploadStatus('uploading', 'Bild wird hochgeladen…', 100);
-        /* natural_width/_height fuer DPI-Quality-Calc speichern */
-        setState({
-          photo_url_original: dataUrl,
-          natural_width: originalWidth,
-          natural_height: originalHeight,
-        });
-        /* kurz 100% sichtbar lassen, dann verstecken + Cropper-Modal oeffnen */
+        showUploadStatus(slot, 'uploading', 'Bild wird hochgeladen…', 100);
+        writeOriginalToState(slot, dataUrl, originalWidth, originalHeight);
         setTimeout(() => {
-          hideUploadStatus();
-          openCropperWithUrl(dataUrl);
+          hideUploadStatus(slot);
+          openCropperWithUrl(dataUrl, slot);
         }, 250);
       })
       .catch((err) => {
-        console.warn('[photo-upload] resize failed, fallback to original:', err);
-        showUploadStatus('error', 'Bild konnte nicht verarbeitet werden.');
+        console.warn('[photo-upload] resize failed, fallback:', err);
+        showUploadStatus(slot, 'error', 'Bild konnte nicht verarbeitet werden.');
         setTimeout(() => {
-          hideUploadStatus();
-          setState({ photo_url_original: ev.target.result });
-          openCropperWithUrl(ev.target.result);
+          hideUploadStatus(slot);
+          writeOriginalToState(slot, ev.target.result, 0, 0);
+          openCropperWithUrl(ev.target.result, slot);
         }, 500);
       });
   };
   reader.onerror = () => {
-    showUploadStatus('error', 'Datei konnte nicht gelesen werden.');
-    setTimeout(hideUploadStatus, 3000);
+    showUploadStatus(slot, 'error', 'Datei konnte nicht gelesen werden.');
+    setTimeout(() => hideUploadStatus(slot), 3000);
   };
   reader.readAsDataURL(file);
 }
 
 // -------------------------------------------------------------------
-// Cropper Modal
+// Cropper-Modal — IMMER aspectRatio 1 (quadratisch, visuell als Kreis via CSS)
 // -------------------------------------------------------------------
-function openCropperWithUrl(url) {
+function openCropperWithUrl(url, slot) {
   if (typeof Cropper === 'undefined') {
     console.error('[photo-upload] Cropper.js noch nicht geladen');
     alert('Bild-Editor wird noch geladen. Bitte kurz warten.');
     return;
   }
-
+  pendingSlot = slot;
   cropperImage.src = url;
   cropperBackdrop.classList.add('visible');
+  cropperBackdrop.dataset.shape = 'circle';   // CSS-Hook für runde Maske
 
   if (cropperInstance) {
     try { cropperInstance.destroy(); } catch (e) {}
     cropperInstance = null;
   }
-
   cropperImage.onload = () => {
-    const cropAspect = measureCropAspect();
-
-    // rAF deferren — Modal-Display-Switch ist sync, aber Layout-Reflow
-    // kommt erst im naechsten Frame. Sonst misst Cropper.js die alten
-    // 0x0-Container-Maße (display:none vorher).
     requestAnimationFrame(() => {
       cropperInstance = new Cropper(cropperImage, {
-        aspectRatio: cropAspect,
+        aspectRatio: 1,                /* Quadrat — Render-Slot ist Kreis (border-radius:50%) */
         viewMode: 1,
         autoCropArea: 1,
         movable: true,
@@ -212,7 +215,7 @@ function openCropperWithUrl(url) {
         cropBoxResizable: true,
         responsive: false,
         background: false,
-        modal: true,         // dunkler Overlay aussserhalb der Crop-Box (wie Fotoposter)
+        modal: true,
         wheelZoomRatio: 0.08,
       });
     });
@@ -226,13 +229,11 @@ function closeCropperModal() {
     cropperInstance = null;
   }
   cropperImage.src = '';
-  // File-Input zuruecksetzen damit dasselbe File erneut waehlbar bleibt
-  if (fileInput) fileInput.value = '';
+  document.querySelectorAll('.photo-file-input').forEach(inp => { inp.value = ''; });
 }
 
 function applyCrop() {
   if (!cropperInstance) return;
-
   try {
     const canvas = cropperInstance.getCroppedCanvas({
       maxWidth: 2400,
@@ -243,112 +244,93 @@ function applyCrop() {
     });
     const dataUrl = canvas.toDataURL('image/jpeg', 0.92);
 
-    /* Crop-Ratios (0..1) fuer DPI-Quality-Calc: cropped px / source px.
-     * Cropper sieht eine 2400px-downscaled Variante; das Ratio ist invariant
-     * gegen Downscaling, gilt also auch fuer die echten Original-Pixel. */
-    const cropData = cropperInstance.getData(true); // rounded ints
+    const cropData = cropperInstance.getData(true);
     const imageData = cropperInstance.getImageData();
     const sourceW = imageData.naturalWidth || 1;
     const sourceH = imageData.naturalHeight || 1;
     const cropRatioW = Math.min(1, Math.max(0, (cropData.width || sourceW) / sourceW));
     const cropRatioH = Math.min(1, Math.max(0, (cropData.height || sourceH) / sourceH));
 
-    setState({
-      photo_url: dataUrl,
-      crop_width: cropRatioW,
-      crop_height: cropRatioH,
-    });
-    showUploadedState(pendingFileName);
+    writeCroppedToState(pendingSlot, dataUrl, cropRatioW, cropRatioH);
+    setSlotUploadedUI(pendingSlot, true);
   } catch (err) {
     console.error('[photo-upload] getCroppedCanvas failed:', err);
     alert('Foto konnte nicht zugeschnitten werden.');
   }
-
   closeCropperModal();
 }
 
 // -------------------------------------------------------------------
-// Init — DOMContentLoaded handler
+// Init — bindet Click-Handler an alle Foto-Slots via data-slot
 // -------------------------------------------------------------------
 function init() {
-  uploadZone = document.getElementById('photo-upload-zone');
-  fileInput = document.getElementById('photo-file-input');
-  changeRow = document.getElementById('photo-change-row');
-  nameDisplay = document.getElementById('photo-name-display');
-  uploadStatus = document.getElementById('photo-upload-status');
   cropperBackdrop = document.getElementById('photo-cropper-backdrop');
-  cropperImage = document.getElementById('photo-cropper-image');
-  applyBtn = document.getElementById('photo-cropper-apply');
-  cancelBtn = document.getElementById('photo-cropper-cancel');
+  cropperImage   = document.getElementById('photo-cropper-image');
+  applyBtn       = document.getElementById('photo-cropper-apply');
+  cancelBtn      = document.getElementById('photo-cropper-cancel');
 
-  if (!uploadZone || !fileInput || !cropperBackdrop || !cropperImage) {
-    console.warn('[photo-upload] required DOM nodes missing — skipping init');
+  if (!cropperBackdrop || !cropperImage) {
+    console.warn('[photo-upload] Cropper-Modal-DOM fehlt — skip init');
     return;
   }
 
-  // Click auf Zone -> File-Picker (label-Element triggert das eh, aber
-  // wir lassen es defensiv stehen falls jemand das label durch div ersetzt)
-  fileInput.addEventListener('change', (e) => {
-    const file = e.target.files && e.target.files[0];
-    handleFile(file);
-  });
-
-  // Drag-Drop
-  ['dragenter', 'dragover'].forEach(evt => {
-    uploadZone.addEventListener(evt, (e) => {
-      e.preventDefault();
-      e.stopPropagation();
-      uploadZone.classList.add('drag-over');
+  // Pro File-Input + Slot
+  document.querySelectorAll('.photo-file-input').forEach(input => {
+    const slot = parseInt(input.dataset.slot || '1', 10);
+    input.addEventListener('change', (e) => {
+      const file = e.target.files && e.target.files[0];
+      handleFile(file, slot);
     });
   });
-  ['dragleave', 'drop'].forEach(evt => {
-    uploadZone.addEventListener(evt, (e) => {
-      e.preventDefault();
-      e.stopPropagation();
-      uploadZone.classList.remove('drag-over');
+
+  // Drag-Drop pro Upload-Zone (falls vorhanden — V1.7 hat klassische Buttons,
+  // aber falls ein Slot wieder ne drop-zone bekommt, funktioniert's)
+  document.querySelectorAll('.photo-upload-button[data-slot]').forEach(zone => {
+    const slot = parseInt(zone.dataset.slot || '1', 10);
+    ['dragenter', 'dragover'].forEach(evt => {
+      zone.addEventListener(evt, (e) => {
+        e.preventDefault(); e.stopPropagation();
+        zone.classList.add('drag-over');
+      });
+    });
+    ['dragleave', 'drop'].forEach(evt => {
+      zone.addEventListener(evt, (e) => {
+        e.preventDefault(); e.stopPropagation();
+        zone.classList.remove('drag-over');
+      });
+    });
+    zone.addEventListener('drop', (e) => {
+      const file = e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0];
+      handleFile(file, slot);
     });
   });
-  uploadZone.addEventListener('drop', (e) => {
-    const file = e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0];
-    handleFile(file);
+
+  // Recrop pro Slot
+  document.querySelectorAll('.photo-recrop-btn[data-slot]').forEach(btn => {
+    const slot = parseInt(btn.dataset.slot || '1', 10);
+    btn.addEventListener('click', () => {
+      const original = getOriginalForSlot(slot);
+      if (original) openCropperWithUrl(original, slot);
+    });
   });
 
-  // "Neu zuschneiden" -> Modal mit ORIGINAL-DataURL wieder oeffnen
-  // (nicht der bereits gecroppten Variante, sonst kann der User nur
-  // weiter reinzoomen, nicht wieder rauszoomen).
-  const recropBtn = document.getElementById('photo-recrop-btn');
-  if (recropBtn) {
-    recropBtn.addEventListener('click', () => {
-      const original = state.photo_url_original;
-      if (original) {
-        openCropperWithUrl(original);
-      } else {
-        // Fallback: was als <img> in der Render-Area liegt
-        const img = document.querySelector('.blanket-photo img');
-        if (img && img.src) openCropperWithUrl(img.src);
-      }
+  // Change pro Slot — öffnet File-Picker neu
+  document.querySelectorAll('.photo-change-btn[data-slot]').forEach(btn => {
+    const slot = parseInt(btn.dataset.slot || '1', 10);
+    btn.addEventListener('click', () => {
+      const input = document.querySelector(`.photo-file-input[data-slot="${slot}"]`);
+      if (input) input.click();
     });
-  }
+  });
 
-  // "Anderes Foto" -> Datei-Picker erneut oeffnen
-  const changeBtn = document.getElementById('photo-change-btn');
-  if (changeBtn) {
-    changeBtn.addEventListener('click', () => {
-      fileInput.click();
-    });
-  }
-
-  // Modal-Buttons
-  applyBtn.addEventListener('click', applyCrop);
-  cancelBtn.addEventListener('click', () => {
+  // Cropper-Modal-Buttons
+  if (applyBtn) applyBtn.addEventListener('click', applyCrop);
+  if (cancelBtn) cancelBtn.addEventListener('click', () => {
     closeCropperModal();
     pendingFileName = null;
   });
 
-  // Drag-aware Backdrop-Close: nur schliessen wenn pointerdown UND pointerup
-  // auf dem Backdrop selbst stattfanden — sonst frisst ein Drag aus der
-  // Crop-Box raus den click und schliesst das Modal ungewollt
-  // (photo.js Z. 561–583 Pattern).
+  // Drag-aware Backdrop-Close
   let backdropArmed = false;
   cropperBackdrop.addEventListener('pointerdown', (e) => {
     backdropArmed = (e.target === cropperBackdrop);

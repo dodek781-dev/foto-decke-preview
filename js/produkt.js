@@ -5,6 +5,8 @@ import { setState, state, SKU_MAP } from './state.js';
 const $materialLinks = document.querySelectorAll('#material-picker > li > a');
 const $sizeLinks = document.querySelectorAll('#size-picker > a');
 const $priceDisplay = document.getElementById('variant-price');
+const $photoCountLinks = document.querySelectorAll('#photo-count-picker > li > a');
+const $photoSlot2 = document.querySelector('.photo-slot[data-slot="2"]');
 
 function fmtPrice(eur) {
   return '€' + eur.toFixed(2).replace('.', ',');
@@ -22,6 +24,18 @@ function refreshPrices() {
     $priceDisplay.textContent = fmtPrice(cur.price_eur);
   }
 }
+
+/* Foto-Anzahl-Picker (Layout-Tab) — 1 oder 2 Fotos nebeneinander */
+$photoCountLinks.forEach(link => {
+  link.addEventListener('click', e => {
+    e.preventDefault();
+    $photoCountLinks.forEach(l => l.classList.toggle('current', l === link));
+    const count = parseInt(link.dataset.photoCount || '1', 10);
+    setState({ photo_count: count });
+    /* Slot 2 ein-/ausblenden */
+    if ($photoSlot2) $photoSlot2.style.display = (count === 2) ? '' : 'none';
+  });
+});
 
 /* Material-Picker (Layout-Tab) */
 $materialLinks.forEach(link => {
@@ -70,14 +84,24 @@ if ($cartBtn) {
       _Photo_Config_JSON: JSON.stringify({
         material: state.material,
         size: state.size,
+        photo_count: state.photo_count,
         hauptzeile: state.hauptzeile,
         untertitel: state.untertitel,
         text_font_style: state.text_font_style,
-        photo_url: state.photo_url ? '(present)' : null,
-        crop_width: state.crop_width,
-        crop_height: state.crop_height,
-        natural_width: state.natural_width,
-        natural_height: state.natural_height,
+        photo: state.photo_url ? {
+          present: true,
+          crop_width: state.crop_width,
+          crop_height: state.crop_height,
+          natural_width: state.natural_width,
+          natural_height: state.natural_height,
+        } : null,
+        photo2: (state.photo_count === 2 && state.photo2_url) ? {
+          present: true,
+          crop_width: state.crop_width_2,
+          crop_height: state.crop_height_2,
+          natural_width: state.natural_width_2,
+          natural_height: state.natural_height_2,
+        } : null,
         print_px: skuEntry ? skuEntry.print_px : null,
       }),
       _Product_Type: 'Personalisierte Fußmatte',

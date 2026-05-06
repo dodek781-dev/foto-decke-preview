@@ -91,9 +91,8 @@
   color: #fafafa;
 }
 
-/* Foto optional, in Kreis-Form (Sternkarte-Pattern, Memory project_starmap_photo_upload_section.md) */
+/* Foto-Slots (Kreis-Form, Sternkarte-Pattern). V1.7 mit 2-Slot-Support. */
 .blanket-photo {
-  width: 30cqw;
   aspect-ratio: 1;            /* Kreis: width = height */
   border-radius: 50%;
   overflow: hidden;
@@ -110,15 +109,23 @@
   display: block;
 }
 
-/* Wenn Foto da → Layout: Hauptzeile oben, Foto mitte, Untertitel unten */
-.render-area[data-has-photo="true"] .blanket-frame {
-  /* Reihenfolge: Hauptzeile, Foto, Untertitel */
+/* Default-Größe pro Foto (1-Foto-Layout) */
+.render-area[data-photo-count="1"] .blanket-photo {
+  width: 30cqw;
 }
+
+/* 2-Foto-Layout: Photos nebeneinander zentriert mit symmetrischem Gap.
+ * Foto-Größe kleiner (~22cqw), gap ~5cqw → totale Foto-Reihe ~49cqw */
+.render-area[data-photo-count="2"] .blanket-photo {
+  width: 22cqw;
+}
+
+/* Wenn min. ein Foto da → Layout: Hauptzeile oben, Foto(s) mitte, Untertitel unten */
 .render-area[data-has-photo="true"] .blanket-photo {
   order: 2;
 }
 .render-area[data-has-photo="true"] .blanket-text {
-  display: contents;          /* Hauptzeile + Untertitel als direkte Frame-Children, sodass order greift */
+  display: contents;          /* Hauptzeile + Untertitel als direkte Frame-Children */
 }
 .render-area[data-has-photo="true"] .blanket-text__hauptzeile {
   order: 1;
@@ -129,6 +136,59 @@
   order: 3;
   text-align: center;
   width: 100%;
+}
+/* 2-Foto-Layout: beide Slots horizontal nebeneinander auf gleicher Höhe.
+ * Frame ist flex-column, also nutzen wir einen photo-row-Container ODER
+ * wir setzen beide Slots auf gleichen order + nutzen flex-direction-Trick.
+ * Cleaner Approach: photo-Slots werden als horizontal-Pair gewrapped via CSS.
+ *
+ * Alternative ohne extra Wrapper: order: 2 für beide + flex-Eltern hat
+ * flex-direction: column → würde stapeln. Lösung: photo-count==2 macht
+ * den Frame zu einer Mischung — text als block, photos als horizontaler
+ * sub-flex. Wir bauen das via display: contents auf .blanket-text und
+ * einem implizit horizontal-wrapped pair via flex-wrap. Pragmatischer:
+ * absolute positioning der 2 slots nebeneinander ist zu fragil — wir
+ * nehmen einen photo-row-Hack: beide photos haben gleiches order=2,
+ * Frame setzt zusätzliche row-flex via :has() oder wir wrappen sie. */
+
+/* 2-Foto-Symmetrie: beide nebeneinander zentriert. Genau wie 2 inline
+ * children in einem flex-column-Parent normalerweise stapeln. Trick:
+ * wir setzen beide Slots in ein implizites pseudo-wrapper via gap und
+ * flex-flow:row wenn Eltern :has(2 photos). Browser-Support für :has()
+ * ist mittlerweile breit (Chrome 105+, Firefox 121+, Safari 15.4+). */
+.blanket-frame:has(.blanket-photo[data-slot="2"]:not([style*="display: none"])) {
+  /* Frame bleibt column, aber wir positionieren die 2 Photos via gap in
+   * einer horizontal-spread-Logik. */
+}
+/* Beide Slots im 2-Foto-Modus auf gleichen flex-order, mit gap-Spacing. */
+.render-area[data-photo-count="2"] .blanket-photo[data-slot="1"] {
+  order: 2;
+  margin-right: 2.5cqw;
+}
+.render-area[data-photo-count="2"] .blanket-photo[data-slot="2"] {
+  order: 2;
+  margin-left: 2.5cqw;
+}
+/* Damit beide Slots auf einer Linie stehen, wechseln wir den Frame-Direction-
+ * Hack: wir benutzen flex-wrap und einen invisible "row-break" zwischen
+ * Hauptzeile und Untertitel. Saubere Lösung: bei photo_count==2 packen
+ * wir die beiden Photos in einen impliziten Row via inline-block-Trick.
+ * Pragmatisch & robust: wir flippen den Frame auf flex-wrap + zwei Photos
+ * mit flex-basis 50% — sie landen nebeneinander. */
+.render-area[data-photo-count="2"] .blanket-frame {
+  flex-flow: row wrap;
+  align-content: center;
+  justify-content: center;
+}
+.render-area[data-photo-count="2"] .blanket-text__hauptzeile {
+  flex-basis: 100%;            /* volle Zeile, alleine */
+}
+.render-area[data-photo-count="2"] .blanket-text__untertitel {
+  flex-basis: 100%;
+}
+/* Beide Photos teilen sich ihre Zeile */
+.render-area[data-photo-count="2"] .blanket-photo {
+  flex-basis: auto;
 }
 
 /* =====================================================================

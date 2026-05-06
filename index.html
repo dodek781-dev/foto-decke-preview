@@ -14,9 +14,9 @@
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Playfair+Display:wght@400;700;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://use.typekit.net/sgc6idq.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.css">
-  <link rel="stylesheet" href="css/base.css?v=12">
-  <link rel="stylesheet" href="css/editor.css?v=12">
-  <link rel="stylesheet" href="css/render.css?v=12">
+  <link rel="stylesheet" href="css/base.css?v=13">
+  <link rel="stylesheet" href="css/editor.css?v=13">
+  <link rel="stylesheet" href="css/render.css?v=13">
 </head>
 <body>
   <header class="preview-topbar" aria-hidden="true">
@@ -111,22 +111,43 @@
           </ul>
         </div>
 
-        <!-- Foto-Upload (optional, kompakter Distantlines-Standard-Button statt Drop-Zone) -->
+        <!-- Foto-Anzahl-Picker (1 oder 2 Fotos nebeneinander) -->
         <div class="elem__picker">
-          <p>Foto (optional)</p>
-          <label class="photo-upload-button" id="photo-upload-zone">
+          <p>Foto-Anzahl</p>
+          <ul class="three photo-count-picker" id="photo-count-picker">
+            <li><a href="#" class="current" data-photo-count="1">
+              <span class="media"><span class="img">
+                <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
+                  <circle cx="16" cy="16" r="9" fill="#cbcbcb" stroke="#16212c" stroke-width="1.5"/>
+                </svg>
+              </span></span>
+              1 Foto
+            </a></li>
+            <li><a href="#" data-photo-count="2">
+              <span class="media"><span class="img">
+                <svg width="48" height="32" viewBox="0 0 48 32" fill="none">
+                  <circle cx="14" cy="16" r="9" fill="#cbcbcb" stroke="#16212c" stroke-width="1.5"/>
+                  <circle cx="34" cy="16" r="9" fill="#cbcbcb" stroke="#16212c" stroke-width="1.5"/>
+                </svg>
+              </span></span>
+              2 Fotos
+            </a></li>
+          </ul>
+        </div>
+
+        <!-- Foto-Slot 1 -->
+        <div class="elem__picker photo-slot" data-slot="1">
+          <p class="photo-slot-label">Foto 1 (optional)</p>
+          <label class="photo-upload-button" data-slot="1" id="photo-upload-zone">
             <span>Foto hochladen</span>
-            <input type="file" id="photo-file-input" accept="image/jpeg,image/png,image/heic,image/heif">
+            <input type="file" class="photo-file-input" data-slot="1" id="photo-file-input" accept="image/jpeg,image/png,image/heic,image/heif">
           </label>
-          <p class="photo-upload-hint">JPG, PNG oder HEIC &mdash; max. 20 MB. Wird kreisförmig auf der Fußmatte zentriert.</p>
-
-          <div class="photo-upload-status" id="photo-upload-status"></div>
-
-          <div class="photo-change-row" id="photo-change-row">
-            <button type="button" id="photo-recrop-btn">Neu zuschneiden</button>
-            <button type="button" id="photo-change-btn">Anderes Foto</button>
+          <p class="photo-upload-hint">JPG, PNG oder HEIC &mdash; max. 20 MB. Wird kreisförmig zugeschnitten.</p>
+          <div class="photo-upload-status" data-slot="1" id="photo-upload-status"></div>
+          <div class="photo-change-row" data-slot="1" id="photo-change-row">
+            <button type="button" class="photo-recrop-btn" data-slot="1" id="photo-recrop-btn">Neu zuschneiden</button>
+            <button type="button" class="photo-change-btn" data-slot="1" id="photo-change-btn">Anderes Foto</button>
           </div>
-
           <button type="button" class="photo-quality-btn" id="photo-quality-btn" style="display:none;" data-level="">
             <span class="quality-icon" aria-hidden="true">
               <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
@@ -136,6 +157,21 @@
             <span class="quality-label">Qualit&auml;t:</span>
             <span class="quality-status">Ausgezeichnet</span>
           </button>
+        </div>
+
+        <!-- Foto-Slot 2 (nur sichtbar bei photo_count == 2) -->
+        <div class="elem__picker photo-slot" data-slot="2" style="display:none;">
+          <p class="photo-slot-label">Foto 2</p>
+          <label class="photo-upload-button" data-slot="2">
+            <span>Foto hochladen</span>
+            <input type="file" class="photo-file-input" data-slot="2" accept="image/jpeg,image/png,image/heic,image/heif">
+          </label>
+          <p class="photo-upload-hint">JPG, PNG oder HEIC &mdash; max. 20 MB. Wird kreisförmig zugeschnitten.</p>
+          <div class="photo-upload-status" data-slot="2"></div>
+          <div class="photo-change-row" data-slot="2">
+            <button type="button" class="photo-recrop-btn" data-slot="2">Neu zuschneiden</button>
+            <button type="button" class="photo-change-btn" data-slot="2">Anderes Foto</button>
+          </div>
         </div>
 
         <!-- Weiter-Button → Text-Tab -->
@@ -264,6 +300,6 @@
   </div>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.js"></script>
-  <script type="module" src="js/main.js?v=12"></script>
+  <script type="module" src="js/main.js?v=13"></script>
 </body>
 </html>
