@@ -107,12 +107,14 @@
   user-select: none;
   z-index: 1;
 }
-/* Linke Seite — beide Pfoten gleiche Rotation (nach rechts geneigt), nahe am Foto */
-.blanket-decoration[data-corner="tl"] { top: 38%; left: 18%; transform: rotate(15deg); }
-.blanket-decoration[data-corner="bl"] { top: 62%; left: 18%; transform: rotate(15deg); }
-/* Rechte Seite — beide gespiegelt (gleiche Rotation, andere Richtung) */
-.blanket-decoration[data-corner="tr"] { top: 38%; right: 18%; transform: rotate(-15deg); }
-.blanket-decoration[data-corner="br"] { top: 62%; right: 18%; transform: rotate(-15deg); }
+/* Pfoten flankieren das Foto wie Tier-Spuren — 2 OBEN nah am Foto,
+ * 2 UNTEN weiter außen (Walking-Pattern aus User-Screenshot 12:59:10).
+ * Linke Seite: beide rotation +15° (nach rechts geneigt). */
+.blanket-decoration[data-corner="tl"] { top: 36%; left: 22%; transform: rotate(15deg); }
+.blanket-decoration[data-corner="bl"] { top: 62%; left:  8%; transform: rotate(15deg); }
+/* Rechte Seite: beide -15° (gespiegelt) */
+.blanket-decoration[data-corner="tr"] { top: 36%; right: 22%; transform: rotate(-15deg); }
+.blanket-decoration[data-corner="br"] { top: 62%; right:  8%; transform: rotate(-15deg); }
 /* Schwarzes Material → weiße Deko (Filter invert) */
 .render-area[data-material="black"] .blanket-decoration {
   filter: invert(1);
