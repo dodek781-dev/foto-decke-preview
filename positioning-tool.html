@@ -673,6 +673,12 @@ $frame.addEventListener('pointerdown', (ev) => {
 
 const $elControls = document.getElementById('el-controls');
 
+/* Parse number with comma OR dot decimal separator (DE/EN locale) */
+function parseNum(str) {
+  if (typeof str !== 'string') return NaN;
+  return parseFloat(str.replace(',', '.'));
+}
+
 function renderElementControls() {
   if (!state.selectedKey) {
     $elControls.innerHTML = '<p class="hint">Klick ein Element auf der Matte an, um es hier zu editieren.</p>';
@@ -684,24 +690,43 @@ function renderElementControls() {
   const isPhoto = key.startsWith('photo');
   const isText = key === 'hauptzeile' || key === 'untertitel';
 
+  /* Mirror-Display für rechts/unten-Decos: zeigt Distanz zum gespiegelten
+   * Rand statt absolute %, damit symmetrische Positionen identische Zahlen
+   * haben. Z.B. TR.left=92 → angezeigt als right:8 (= TL.left=8). */
+  const isRight  = (key === 'deco_tr' || key === 'deco_br');
+  const isBottom = (key === 'deco_bl' || key === 'deco_br');
+  const horizLabel = isRight  ? 'right %' : 'left %';
+  const vertLabel  = isBottom ? 'bottom %' : 'top %';
+  const horizValue = isRight  ? +(100 - pos.left).toFixed(2) : pos.left;
+  const vertValue  = isBottom ? +(100 - pos.top).toFixed(2)  : pos.top;
+  const horizProp  = isRight  ? 'leftMirror' : 'left';
+  const vertProp   = isBottom ? 'topMirror'  : 'top';
+
+  /* type=text damit Komma akzeptiert wird (HTML5 number type ist locale-abhaengig) */
   let html = `<div class="el-control">
     <div class="el-control-header"><strong>${ELEMENT_LABELS[key]}</strong><span class="badge">${key}</span></div>
     <div class="row2">
-      <div><label>top %</label><input type="number" step="0.1" data-prop="top" value="${pos.top}"></div>
-      <div><label>left %</label><input type="number" step="0.1" data-prop="left" value="${pos.left}"></div>
+      <div><label>${vertLabel}</label><input type="text" inputmode="decimal" data-prop="${vertProp}" value="${vertValue}"></div>
+      <div><label>${horizLabel}</label><input type="text" inputmode="decimal" data-prop="${horizProp}" value="${horizValue}"></div>
     </div>`;
-  if (isPhoto || isDeco) html += `<label>Größe (cqw)</label><input type="number" step="0.5" data-prop="size" value="${pos.size}">`;
-  if (isText) html += `<label>Font-Size (cqw)</label><input type="number" step="0.5" data-prop="fontSize" value="${pos.fontSize}">`;
-  if (isDeco) html += `<label>Rotation (°)</label><input type="number" step="1" data-prop="rotate" value="${pos.rotate}">`;
+  if (isPhoto || isDeco) html += `<label>Größe (cqw)</label><input type="text" inputmode="decimal" data-prop="size" value="${pos.size}">`;
+  if (isText) html += `<label>Font-Size (cqw)</label><input type="text" inputmode="decimal" data-prop="fontSize" value="${pos.fontSize}">`;
+  if (isDeco) html += `<label>Rotation (°)</label><input type="text" inputmode="decimal" data-prop="rotate" value="${pos.rotate}">`;
   html += `</div>`;
   $elControls.innerHTML = html;
 
   $elControls.querySelectorAll('input[data-prop]').forEach(inp => {
     inp.addEventListener('input', (ev) => {
       const prop = ev.target.dataset.prop;
-      const val = parseFloat(ev.target.value);
+      const val = parseNum(ev.target.value);
       if (isNaN(val)) return;
-      state.positions[key][prop] = val;
+      if (prop === 'leftMirror') {
+        state.positions[key].left = +(100 - val).toFixed(2);
+      } else if (prop === 'topMirror') {
+        state.positions[key].top  = +(100 - val).toFixed(2);
+      } else {
+        state.positions[key][prop] = val;
+      }
       saveState();
       render();
     });
