@@ -211,7 +211,7 @@
      * NICHT Teil der Druckdatei — nur Editor-Visual-Kontext.
      * Position 50% 0 zeigt Tür oben + Boden runter zum Frame. */
     background-image: url('../assets/editor-bg-mobile.jpg');
-    background-size: 100% auto;
+    background-size: cover;
     background-position: 50% 0%;
   }
 }
