@@ -20,6 +20,8 @@
   .ctrl-row button{flex:1;min-width:60px;padding:7px 6px;background:#3a3a42;color:#eaeaea;border:1px solid #4a4a55;border-radius:5px;cursor:pointer;font-size:12px;font-family:inherit}
   .ctrl-row button.active{background:#7c5aff;border-color:#9678ff}
   .ctrl-row button:hover:not(.active){background:#46464f}
+  .ctrl-stack button{display:block;width:100%;margin-bottom:6px;padding:8px;background:#3a3a42;color:#eaeaea;border:1px solid #4a4a55;border-radius:5px;cursor:pointer;font-size:12px;font-family:inherit;text-align:left}
+  .ctrl-stack button:hover{background:#46464f}
   label{display:block;font-size:11px;color:#9aa0aa;margin:8px 0 3px}
   input[type="number"],input[type="text"]{width:100%;padding:6px 8px;background:#1f1f23;color:#eaeaea;border:1px solid #4a4a55;border-radius:4px;font-family:inherit;font-size:12px}
   input[type="number"]:focus,input[type="text"]:focus{outline:none;border-color:#7c5aff}
@@ -34,19 +36,87 @@
     max-width:calc(100vw - 600px);
     background:#fafaf8 center/cover no-repeat;
     border-radius:4px;
-    overflow:hidden;
+    overflow:visible;
     box-shadow:0 22px 50px rgba(0,0,0,.5),0 10px 22px rgba(0,0,0,.3);
     container-type:inline-size;
   }
+  /* clip content but show handles outside */
+  .blanket-frame::before{content:'';position:absolute;inset:0;background:inherit;border-radius:4px;z-index:-1}
   .blanket-frame[data-material="caramel"]{background-image:url('assets/textures/caramel.jpg')}
   .blanket-frame[data-material="gray"]{background-image:url('assets/textures/gray.jpg')}
   .blanket-frame[data-material="black"]{background-image:url('assets/textures/black.jpg')}
 
-  /* Draggable elements — alle absolute positioned */
+  /* Hilfslinien */
+  .guide-line{position:absolute;background:rgba(124,90,255,.55);pointer-events:none;z-index:5}
+  .guide-line.center-v{top:0;bottom:0;left:50%;width:1px;transform:translateX(-.5px)}
+  .guide-line.center-h{left:0;right:0;top:50%;height:1px;transform:translateY(-.5px)}
+  .guide-line.thirds{background:rgba(255,255,255,.15)}
+  .guide-line.thirds.v-25{top:0;bottom:0;left:25%;width:1px}
+  .guide-line.thirds.v-75{top:0;bottom:0;left:75%;width:1px}
+  .guide-line.thirds.h-25{left:0;right:0;top:25%;height:1px}
+  .guide-line.thirds.h-75{left:0;right:0;top:75%;height:1px}
+  .blanket-frame:not(.show-guides) .guide-line{display:none}
+
+  /* Snap-Glow */
+  .snap-line{position:absolute;background:#ffd54f;pointer-events:none;z-index:7;display:none;box-shadow:0 0 6px rgba(255,213,79,.9)}
+  .snap-line.v{top:0;bottom:0;left:50%;width:2px;transform:translateX(-1px)}
+  .snap-line.h{left:0;right:0;top:50%;height:2px;transform:translateY(-1px)}
+  .blanket-frame.snap-v .snap-line.v{display:block}
+  .blanket-frame.snap-h .snap-line.h{display:block}
+
+  /* Draggable elements */
   .draggable{position:absolute;cursor:grab;user-select:none;touch-action:none}
   .draggable.dragging{cursor:grabbing;z-index:10}
   .draggable.selected{outline:2px dashed #7c5aff;outline-offset:3px}
 
+  /* Pos-Badge: zeigt left%/top% — bei hover, selected, dragging */
+  .pos-badge{
+    position:absolute;
+    top:-22px;left:50%;transform:translateX(-50%);
+    background:#7c5aff;color:#fff;
+    font-family:'JetBrains Mono','Menlo',monospace;
+    font-size:10px;font-weight:600;
+    padding:2px 6px;border-radius:3px;
+    white-space:nowrap;pointer-events:none;
+    opacity:0;transition:opacity .15s;
+    z-index:20;
+  }
+  .draggable:hover .pos-badge,
+  .draggable.selected .pos-badge,
+  .draggable.dragging .pos-badge{opacity:1}
+
+  /* Rotation-Handle */
+  .rot-handle{
+    position:absolute;
+    top:-32px;left:50%;
+    width:14px;height:14px;
+    margin-left:-7px;
+    background:#fff;border:2px solid #7c5aff;border-radius:50%;
+    cursor:grab;
+    z-index:25;
+    box-shadow:0 2px 4px rgba(0,0,0,.4);
+  }
+  .rot-handle::before{
+    content:'';position:absolute;
+    top:14px;left:50%;width:1px;height:18px;
+    margin-left:-.5px;
+    background:#7c5aff;
+  }
+  .rot-handle:active{cursor:grabbing}
+
+  /* Resize-Handle */
+  .resize-handle{
+    position:absolute;
+    bottom:-7px;right:-7px;
+    width:14px;height:14px;
+    background:#7c5aff;border:2px solid #fff;border-radius:3px;
+    cursor:nwse-resize;
+    z-index:25;
+    box-shadow:0 2px 4px rgba(0,0,0,.4);
+  }
+  .resize-handle:active{cursor:grabbing}
+
+  /* Element-spezifisch */
   .el-hauptzeile,.el-untertitel{
     color:#1a1a1a;
     line-height:1.05;letter-spacing:.01em;
@@ -54,10 +124,7 @@
     transform:translate(-50%,0);
     margin:0;padding:2px 6px;
   }
-  .el-untertitel{
-    line-height:1.4;letter-spacing:.08em;text-transform:uppercase;
-  }
-  /* Font-Style-Klassen — auf hauptzeile + untertitel jeweils anwendbar */
+  .el-untertitel{line-height:1.4;letter-spacing:.08em;text-transform:uppercase}
   .font-script{font-family:'parlare',cursive;font-weight:400}
   .font-serif{font-family:'Playfair Display',Georgia,serif;font-weight:700}
   .font-sans{font-family:'Outfit',system-ui,sans-serif;font-weight:500}
@@ -73,10 +140,9 @@
     transform:translate(-50%,-50%);
   }
   .el-photo img{width:100%;height:100%;object-fit:cover;display:block;border-radius:50%}
+  .el-photo .pos-badge{transform:translate(-50%,0);left:50%}
 
-  .el-deco{
-    transform:translate(-50%,-50%) rotate(var(--rot,0deg));
-  }
+  .el-deco{transform:translate(-50%,-50%) rotate(var(--rot,0deg))}
   .el-deco img{display:block;width:100%;height:auto;pointer-events:none}
   .blanket-frame[data-material="black"] .el-deco img{filter:invert(1)}
 
@@ -86,7 +152,6 @@
   .el-control-header strong{font-size:12px}
   .el-control-header .badge{font-size:10px;color:#9aa0aa;font-family:monospace}
   .row2{display:grid;grid-template-columns:1fr 1fr;gap:6px}
-  .row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px}
 
   .export-buttons{display:flex;flex-direction:column;gap:6px;margin-top:14px}
   .export-buttons button{padding:9px;background:#7c5aff;color:#fff;border:none;border-radius:5px;cursor:pointer;font-family:inherit;font-size:12px;font-weight:600}
@@ -112,7 +177,7 @@
 <body>
 <div class="app">
 
-  <!-- =========== LEFT SIDEBAR — global controls =========== -->
+  <!-- =========== LEFT SIDEBAR =========== -->
   <aside class="left">
     <h2>Variante</h2>
     <div class="ctrl-row" id="variant-picker">
@@ -126,6 +191,7 @@
     <div class="ctrl-row" id="photo-count-picker">
       <button data-count="1" class="active">1 Foto</button>
       <button data-count="2">2 Fotos</button>
+      <button data-count="3">3 Fotos</button>
     </div>
 
     <h2>Material</h2>
@@ -161,21 +227,36 @@
       <button data-font="script">Verspielt</button>
     </div>
 
+    <h2>Hilfslinien</h2>
+    <div class="ctrl-row" id="guides-toggle">
+      <button data-guides="on" class="active">An</button>
+      <button data-guides="off">Aus</button>
+    </div>
+    <p class="hint">Lila = Mitte (50%), weiß = 25/75%. Gelb leuchtet wenn Element auf Mitte snappt. Shift während Drag = kein Snap.</p>
+
+    <h2>Symmetrie</h2>
+    <div class="ctrl-stack">
+      <button id="sym-mirror-lr">⇄ Spiegeln links → rechts (Decos)</button>
+      <button id="sym-from-tl">↘ 4 Ecken vom TL ableiten</button>
+      <button id="sym-photos">⇄ Fotos auto-verteilen</button>
+    </div>
+    <p class="hint">Spiegelt linke Decos auf rechte Seite, oder verteilt Fotos gleichmäßig.</p>
+
     <h2>Reset</h2>
     <div class="export-buttons">
       <button class="secondary" id="reset-positions">Positionen zurücksetzen</button>
       <button class="secondary" id="reset-storage">localStorage löschen</button>
     </div>
 
-    <p class="hint">Tipp: Element auf der Matte anklicken → rechts erscheinen seine Werte. Drag zum Verschieben.</p>
+    <p class="hint">Klick Element → selektiert. Drag = verschieben. Lila Kreis oben = drehen. Lila Quadrat unten-rechts = größer/kleiner.</p>
   </aside>
 
   <!-- =========== STAGE =========== -->
   <div class="stage">
-    <div class="blanket-frame" id="frame" data-material="caramel"></div>
+    <div class="blanket-frame show-guides" id="frame" data-material="caramel"></div>
   </div>
 
-  <!-- =========== RIGHT SIDEBAR — element controls + export =========== -->
+  <!-- =========== RIGHT SIDEBAR =========== -->
   <aside class="right">
     <h2>Selektiertes Element</h2>
     <div id="el-controls">
@@ -187,7 +268,7 @@
       <button id="export-json">JSON anzeigen</button>
       <button id="export-css">CSS anzeigen</button>
     </div>
-    <p class="hint">JSON kannst du direkt in den Chat pasten — ich übernehme die Werte 1:1 in render.css.</p>
+    <p class="hint">JSON ist am einfachsten — paste mir den Block, ich übernehme die Werte 1:1 in render.css.</p>
   </aside>
 
 </div>
@@ -222,13 +303,13 @@ const VARIANT_DECO = {
 
 const ASPECT = { '70x50': 1.4, '140x90': 140/90 };
 
-// Defaults — abgeleitet aus aktuellem render.css V1.8.6 Stand
-function makeDefaults() {
+function makeDefaults1Photo() {
   return {
-    hauptzeile: { top: 13, left: 50, fontSize: 11 },             // %, cqw
+    hauptzeile: { top: 13, left: 50, fontSize: 11 },
     untertitel: { top: 86, left: 50, fontSize: 3.2 },
-    photo1:     { top: 50, left: 50, size: 40 },                 // % center, cqw
-    photo2:     { top: 50, left: 50, size: 40 },
+    photo1:     { top: 50, left: 50, size: 40 },
+    photo2:     { top: 50, left: 70, size: 40 },
+    photo3:     { top: 50, left: 75, size: 30 },
     deco_tl:    { top: 36, left: 22, size: 11, rotate: -15 },
     deco_tr:    { top: 36, left: 78, size: 11, rotate: 15 },
     deco_bl:    { top: 62, left:  8, size: 11, rotate: -15 },
@@ -241,24 +322,44 @@ function makeDefaults2Photo() {
     untertitel: { top: 86, left: 50, fontSize: 3.2 },
     photo1:     { top: 50, left: 30, size: 40 },
     photo2:     { top: 50, left: 70, size: 40 },
+    photo3:     { top: 50, left: 75, size: 30 },
     deco_tl:    { top:  9, left:  6, size:  7, rotate: -15 },
     deco_tr:    { top:  9, left: 94, size:  7, rotate: 15 },
     deco_bl:    { top: 91, left:  6, size:  7, rotate: -15 },
     deco_br:    { top: 91, left: 94, size:  7, rotate: 15 },
   };
 }
+function makeDefaults3Photo() {
+  return {
+    hauptzeile: { top: 13, left: 50, fontSize: 11 },
+    untertitel: { top: 86, left: 50, fontSize: 3.2 },
+    photo1:     { top: 50, left: 22, size: 30 },
+    photo2:     { top: 50, left: 50, size: 30 },
+    photo3:     { top: 50, left: 78, size: 30 },
+    deco_tl:    { top:  9, left:  6, size:  6, rotate: -15 },
+    deco_tr:    { top:  9, left: 94, size:  6, rotate: 15 },
+    deco_bl:    { top: 91, left:  6, size:  6, rotate: -15 },
+    deco_br:    { top: 91, left: 94, size:  6, rotate: 15 },
+  };
+}
+function makeDefaults(count) {
+  if (count === 2) return makeDefaults2Photo();
+  if (count === 3) return makeDefaults3Photo();
+  return makeDefaults1Photo();
+}
 
 const DEFAULT_PHOTO = 'assets/photo-mockup-default.jpg';
 const ELEMENT_LABELS = {
   hauptzeile: 'Hauptzeile',
   untertitel: 'Untertitel',
-  photo1: 'Foto 1',
-  photo2: 'Foto 2',
-  deco_tl: 'Deko ↖ TL',
-  deco_tr: 'Deko ↗ TR',
-  deco_bl: 'Deko ↙ BL',
-  deco_br: 'Deko ↘ BR',
+  photo1: 'Foto 1', photo2: 'Foto 2', photo3: 'Foto 3',
+  deco_tl: 'Deko ↖ TL', deco_tr: 'Deko ↗ TR',
+  deco_bl: 'Deko ↙ BL', deco_br: 'Deko ↘ BR',
 };
+
+const SNAP_TOLERANCE = 2;       // % distance for snap to 50
+const ROT_SNAP_TOLERANCE = 3;   // degrees for rotation snap (with shift)
+const ROT_SNAP_VALUES = [0, 15, 30, 45, 60, 90, 180, -15, -30, -45, -60, -90, -180];
 
 // =========================================================================
 // STATE
@@ -273,22 +374,23 @@ const state = {
   untertitel: 'FAMILIE MÜLLER LEBT HIER AUCH...',
   fontHauptzeile: 'script',
   fontUntertitel: 'sans',
-  positions: makeDefaults(),
+  showGuides: true,
+  positions: makeDefaults1Photo(),
   selectedKey: null,
 };
 
-const STORAGE_KEY = 'foto-decke-positioning-tool-v1';
+const STORAGE_KEY = 'foto-decke-positioning-tool-v2';
 
 function loadState() {
   try {
     const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || 'null');
-    if (saved && saved.version === 1) {
+    if (saved && saved.version === 2) {
       Object.assign(state, saved.state);
     }
   } catch(e){}
 }
 function saveState() {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify({ version: 1, state }));
+  localStorage.setItem(STORAGE_KEY, JSON.stringify({ version: 2, state }));
 }
 
 // =========================================================================
@@ -298,37 +400,61 @@ function saveState() {
 const $frame = document.getElementById('frame');
 
 function render() {
-  // Frame attrs
   $frame.dataset.material = state.material;
   $frame.style.setProperty('--blanket-aspect', ASPECT[state.size]);
-
-  // Auto-distribute photos in 2-Foto-Mode wenn beide auf gleicher Position
-  if (state.photoCount === 2) {
-    const p1 = state.positions.photo1, p2 = state.positions.photo2;
-    if (p1.left === p2.left && p1.top === p2.top) {
-      state.positions.photo1.left = 30;
-      state.positions.photo2.left = 70;
-    }
-  }
-
-  // Clear children
+  $frame.classList.toggle('show-guides', state.showGuides);
   $frame.innerHTML = '';
 
-  // Hauptzeile
+  // Hilfslinien
+  ['center-v','center-h','thirds v-25','thirds v-75','thirds h-25','thirds h-75'].forEach(cls => {
+    const ln = document.createElement('div');
+    ln.className = 'guide-line ' + cls;
+    $frame.appendChild(ln);
+  });
+  // Snap-Glow-Lines (immer im DOM, sichtbar via .snap-v / .snap-h auf Frame)
+  const snapV = document.createElement('div'); snapV.className='snap-line v'; $frame.appendChild(snapV);
+  const snapH = document.createElement('div'); snapH.className='snap-line h'; $frame.appendChild(snapH);
+
+  // Texts
   buildElement('hauptzeile', { tag: 'h2', class: `el-hauptzeile font-${state.fontHauptzeile} draggable`, text: state.hauptzeile });
-  // Untertitel
-  buildElement('untertitel', { tag: 'p', class: `el-untertitel font-${state.fontUntertitel} draggable`, text: state.untertitel });
+  buildElement('untertitel', { tag: 'p',  class: `el-untertitel font-${state.fontUntertitel} draggable`, text: state.untertitel });
 
   // Photos
-  buildPhoto('photo1');
-  if (state.photoCount === 2) buildPhoto('photo2');
+  for (let i = 1; i <= state.photoCount; i++) buildPhoto('photo' + i);
 
-  // Decorations (only if variant has deco)
+  // Decorations
   if (VARIANT_DECO[state.variant]) {
     ['deco_tl','deco_tr','deco_bl','deco_br'].forEach(k => buildDeco(k));
   }
 
   renderElementControls();
+}
+
+function attachHandles(el, key, opts) {
+  // Pos-Badge immer
+  const badge = document.createElement('span');
+  badge.className = 'pos-badge';
+  badge.dataset.role = 'badge';
+  el.appendChild(badge);
+  updateBadge(el, state.positions[key]);
+
+  // Wenn selected: Rotate + Resize Handles
+  if (state.selectedKey === key) {
+    if (opts.rotatable) {
+      const rh = document.createElement('span');
+      rh.className = 'rot-handle';
+      rh.dataset.role = 'rotate';
+      el.appendChild(rh);
+      attachRotate(rh, el, key);
+    }
+    if (opts.resizable) {
+      const rsh = document.createElement('span');
+      rsh.className = 'resize-handle';
+      rsh.dataset.role = 'resize';
+      el.appendChild(rsh);
+      attachResize(rsh, el, key);
+    }
+  }
 }
 
 function buildElement(key, opts) {
@@ -342,6 +468,7 @@ function buildElement(key, opts) {
   if (pos.fontSize) el.style.fontSize = pos.fontSize + 'cqw';
   if (state.selectedKey === key) el.classList.add('selected');
   attachDrag(el, key);
+  attachHandles(el, key, { rotatable: false, resizable: true });
   $frame.appendChild(el);
 }
 
@@ -356,10 +483,10 @@ function buildPhoto(key) {
   wrap.style.height = pos.size + 'cqw';
   if (state.selectedKey === key) wrap.classList.add('selected');
   const img = document.createElement('img');
-  img.src = DEFAULT_PHOTO;
-  img.alt = '';
+  img.src = DEFAULT_PHOTO; img.alt = '';
   wrap.appendChild(img);
   attachDrag(wrap, key);
+  attachHandles(wrap, key, { rotatable: false, resizable: true });
   $frame.appendChild(wrap);
 }
 
@@ -374,19 +501,26 @@ function buildDeco(key) {
   wrap.style.setProperty('--rot', pos.rotate + 'deg');
   if (state.selectedKey === key) wrap.classList.add('selected');
   const img = document.createElement('img');
-  img.src = VARIANT_DECO[state.variant];
-  img.alt = '';
+  img.src = VARIANT_DECO[state.variant]; img.alt = '';
   wrap.appendChild(img);
   attachDrag(wrap, key);
+  attachHandles(wrap, key, { rotatable: true, resizable: true });
   $frame.appendChild(wrap);
 }
 
+function updateBadge(el, pos) {
+  const badge = el.querySelector('.pos-badge');
+  if (badge) badge.textContent = `${pos.left.toFixed(1)}%, ${pos.top.toFixed(1)}%`;
+}
+
 // =========================================================================
-// DRAG
+// DRAG with Snap-to-Center
 // =========================================================================
 
 function attachDrag(el, key) {
   el.addEventListener('pointerdown', (ev) => {
+    // Ignore if click was on a sub-handle (rotate/resize/badge)
+    if (ev.target !== el && ev.target.dataset.role) return;
     ev.preventDefault();
     state.selectedKey = key;
     el.setPointerCapture(ev.pointerId);
@@ -398,36 +532,141 @@ function attachDrag(el, key) {
     const onMove = (mv) => {
       const dx = mv.clientX - startX;
       const dy = mv.clientY - startY;
-      const dxPct = (dx / frameRect.width) * 100;
-      const dyPct = (dy / frameRect.height) * 100;
-      const newLeft = clamp(startPos.left + dxPct, 0, 100);
-      const newTop  = clamp(startPos.top  + dyPct, 0, 100);
+      let newLeft = clamp(startPos.left + (dx / frameRect.width) * 100, 0, 100);
+      let newTop  = clamp(startPos.top  + (dy / frameRect.height) * 100, 0, 100);
+      // Snap-to-Center (unless Shift)
+      if (!mv.shiftKey) {
+        if (Math.abs(newLeft - 50) < SNAP_TOLERANCE) { newLeft = 50; $frame.classList.add('snap-v'); }
+        else $frame.classList.remove('snap-v');
+        if (Math.abs(newTop - 50)  < SNAP_TOLERANCE) { newTop  = 50; $frame.classList.add('snap-h'); }
+        else $frame.classList.remove('snap-h');
+      } else {
+        $frame.classList.remove('snap-v','snap-h');
+      }
       state.positions[key].left = +newLeft.toFixed(2);
       state.positions[key].top  = +newTop.toFixed(2);
       el.style.left = newLeft + '%';
       el.style.top  = newTop  + '%';
-      renderElementControls(); // live-update sidebar inputs
+      updateBadge(el, state.positions[key]);
+      renderElementControls();
     };
     const onUp = () => {
       el.classList.remove('dragging');
+      $frame.classList.remove('snap-v','snap-h');
       document.removeEventListener('pointermove', onMove);
       document.removeEventListener('pointerup', onUp);
       saveState();
-      // Re-render to apply selected highlight
-      render();
+      render();   // re-render to bring up handles for new selection
     };
     document.addEventListener('pointermove', onMove);
     document.addEventListener('pointerup', onUp);
-
-    // re-render now to highlight
-    render();
+    render();    // bring up handles immediately on click
   });
 }
 
-function clamp(v,a,b){ return Math.max(a, Math.min(b, v)); }
+// =========================================================================
+// ROTATE-Handle Drag
+// =========================================================================
+
+function attachRotate(handle, el, key) {
+  handle.addEventListener('pointerdown', (ev) => {
+    ev.preventDefault(); ev.stopPropagation();
+    handle.setPointerCapture(ev.pointerId);
+    const elRect = el.getBoundingClientRect();
+    const cx = elRect.left + elRect.width / 2;
+    const cy = elRect.top  + elRect.height / 2;
+    const startAngle = Math.atan2(ev.clientY - cy, ev.clientX - cx) * 180 / Math.PI;
+    const startRot = state.positions[key].rotate || 0;
+
+    const onMove = (mv) => {
+      const angle = Math.atan2(mv.clientY - cy, mv.clientX - cx) * 180 / Math.PI;
+      let newRot = startRot + (angle - startAngle);
+      // normalize to -180..180
+      while (newRot > 180) newRot -= 360;
+      while (newRot < -180) newRot += 360;
+      // Snap with Shift
+      if (mv.shiftKey) {
+        for (const v of ROT_SNAP_VALUES) {
+          if (Math.abs(newRot - v) < ROT_SNAP_TOLERANCE) { newRot = v; break; }
+        }
+      }
+      state.positions[key].rotate = +newRot.toFixed(1);
+      el.style.setProperty('--rot', newRot + 'deg');
+      renderElementControls();
+    };
+    const onUp = () => {
+      document.removeEventListener('pointermove', onMove);
+      document.removeEventListener('pointerup', onUp);
+      saveState();
+    };
+    document.addEventListener('pointermove', onMove);
+    document.addEventListener('pointerup', onUp);
+  });
+}
 
 // =========================================================================
-// RIGHT SIDEBAR — element controls
+// RESIZE-Handle Drag
+// =========================================================================
+
+function attachResize(handle, el, key) {
+  handle.addEventListener('pointerdown', (ev) => {
+    ev.preventDefault(); ev.stopPropagation();
+    handle.setPointerCapture(ev.pointerId);
+    const elRect = el.getBoundingClientRect();
+    const frameRect = $frame.getBoundingClientRect();
+    const cx = elRect.left + elRect.width / 2;
+    const cy = elRect.top  + elRect.height / 2;
+    const startDist = Math.hypot(ev.clientX - cx, ev.clientY - cy);
+    const isText = key === 'hauptzeile' || key === 'untertitel';
+    const startSize = isText ? state.positions[key].fontSize : state.positions[key].size;
+    const startScale = startSize / startDist;  // cqw per pixel
+
+    const onMove = (mv) => {
+      const newDist = Math.hypot(mv.clientX - cx, mv.clientY - cy);
+      let newSize = newDist * startScale;
+      // Convert to cqw based on frame width: but we already have cqw scale
+      // Actually: we want size in cqw = (elementSize_px / frame_width_px) * 100 (since cqw is %)
+      // distance is half-diagonal, so element halfDiag in cqw:
+      // for square (photo/deco): size = width = 2*halfSide * cos(45°). Half-diagonal = halfSide*sqrt(2).
+      // Simpler: scale linearly with old startSize/startDist ratio. That works.
+      newSize = clamp(newSize, 1, 100);
+      if (isText) {
+        state.positions[key].fontSize = +newSize.toFixed(1);
+        el.style.fontSize = newSize + 'cqw';
+      } else {
+        state.positions[key].size = +newSize.toFixed(1);
+        el.style.width = newSize + 'cqw';
+        if (key.startsWith('photo')) el.style.height = newSize + 'cqw';
+      }
+      renderElementControls();
+    };
+    const onUp = () => {
+      document.removeEventListener('pointermove', onMove);
+      document.removeEventListener('pointerup', onUp);
+      saveState();
+    };
+    document.addEventListener('pointermove', onMove);
+    document.addEventListener('pointerup', onUp);
+  });
+}
+
+// =========================================================================
+// HELPERS
+// =========================================================================
+
+function clamp(v,a,b){ return Math.max(a, Math.min(b, v)); }
+
+// Click on empty frame area = deselect
+$frame.addEventListener('pointerdown', (ev) => {
+  if (ev.target === $frame) {
+    state.selectedKey = null;
+    saveState();
+    render();
+  }
+});
+
+// =========================================================================
+// RIGHT SIDEBAR — Number-Inputs
 // =========================================================================
 
 const $elControls = document.getElementById('el-controls');
@@ -449,15 +688,9 @@ function renderElementControls() {
       <div><label>top %</label><input type="number" step="0.1" data-prop="top" value="${pos.top}"></div>
       <div><label>left %</label><input type="number" step="0.1" data-prop="left" value="${pos.left}"></div>
     </div>`;
-  if (isPhoto || isDeco) {
-    html += `<label>Größe (cqw)</label><input type="number" step="0.5" data-prop="size" value="${pos.size}">`;
-  }
-  if (isText) {
-    html += `<label>Font-Size (cqw)</label><input type="number" step="0.5" data-prop="fontSize" value="${pos.fontSize}">`;
-  }
-  if (isDeco) {
-    html += `<label>Rotation (°)</label><input type="number" step="1" data-prop="rotate" value="${pos.rotate}">`;
-  }
+  if (isPhoto || isDeco) html += `<label>Größe (cqw)</label><input type="number" step="0.5" data-prop="size" value="${pos.size}">`;
+  if (isText) html += `<label>Font-Size (cqw)</label><input type="number" step="0.5" data-prop="fontSize" value="${pos.fontSize}">`;
+  if (isDeco) html += `<label>Rotation (°)</label><input type="number" step="1" data-prop="rotate" value="${pos.rotate}">`;
   html += `</div>`;
   $elControls.innerHTML = html;
 
@@ -474,67 +707,89 @@ function renderElementControls() {
 }
 
 // =========================================================================
-// LEFT SIDEBAR — picker bindings
+// LEFT SIDEBAR pickers
 // =========================================================================
 
-document.querySelectorAll('#variant-picker button').forEach(btn => {
-  btn.addEventListener('click', () => {
-    document.querySelectorAll('#variant-picker button').forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
-    state.variant = btn.dataset.variant;
-    saveState(); render();
+function bindPicker(id, key, parser) {
+  document.querySelectorAll(`#${id} button`).forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll(`#${id} button`).forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      state[key] = parser ? parser(btn.dataset[Object.keys(btn.dataset)[0]]) : btn.dataset[Object.keys(btn.dataset)[0]];
+      saveState(); render();
+    });
   });
-});
-document.querySelectorAll('#photo-count-picker button').forEach(btn => {
+}
+bindPicker('variant-picker',     'variant');
+bindPicker('photo-count-picker', 'photoCount', v => parseInt(v,10));
+bindPicker('material-picker',    'material');
+bindPicker('size-picker',        'size');
+bindPicker('font-hauptzeile-picker', 'fontHauptzeile');
+bindPicker('font-untertitel-picker', 'fontUntertitel');
+
+// Guides toggle
+document.querySelectorAll('#guides-toggle button').forEach(btn => {
   btn.addEventListener('click', () => {
-    document.querySelectorAll('#photo-count-picker button').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('#guides-toggle button').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
-    state.photoCount = parseInt(btn.dataset.count, 10);
-    // Beim Wechsel auf 2-Foto: lade die 2-Foto-Defaults wenn Positionen noch unverändert
-    saveState(); render();
-  });
-});
-document.querySelectorAll('#material-picker button').forEach(btn => {
-  btn.addEventListener('click', () => {
-    document.querySelectorAll('#material-picker button').forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
-    state.material = btn.dataset.material;
-    saveState(); render();
-  });
-});
-document.querySelectorAll('#size-picker button').forEach(btn => {
-  btn.addEventListener('click', () => {
-    document.querySelectorAll('#size-picker button').forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
-    state.size = btn.dataset.size;
-    saveState(); render();
-  });
-});
-document.getElementById('text-hauptzeile').addEventListener('input', (ev) => {
-  state.hauptzeile = ev.target.value; saveState(); render();
-});
-document.getElementById('text-untertitel').addEventListener('input', (ev) => {
-  state.untertitel = ev.target.value; saveState(); render();
-});
-document.querySelectorAll('#font-hauptzeile-picker button').forEach(btn => {
-  btn.addEventListener('click', () => {
-    document.querySelectorAll('#font-hauptzeile-picker button').forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
-    state.fontHauptzeile = btn.dataset.font;
-    saveState(); render();
-  });
-});
-document.querySelectorAll('#font-untertitel-picker button').forEach(btn => {
-  btn.addEventListener('click', () => {
-    document.querySelectorAll('#font-untertitel-picker button').forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
-    state.fontUntertitel = btn.dataset.font;
+    state.showGuides = btn.dataset.guides === 'on';
     saveState(); render();
   });
 });
 
+document.getElementById('text-hauptzeile').addEventListener('input', (ev) => { state.hauptzeile = ev.target.value; saveState(); render(); });
+document.getElementById('text-untertitel').addEventListener('input', (ev) => { state.untertitel = ev.target.value; saveState(); render(); });
+
+// =========================================================================
+// SYMMETRY HELPERS
+// =========================================================================
+
+document.getElementById('sym-mirror-lr').addEventListener('click', () => {
+  // Spiegel TL → TR, BL → BR (left% → 100-left%, rotate → -rotate)
+  const tl = state.positions.deco_tl, bl = state.positions.deco_bl;
+  state.positions.deco_tr = { ...tl, left: 100 - tl.left, rotate: -tl.rotate };
+  state.positions.deco_br = { ...bl, left: 100 - bl.left, rotate: -bl.rotate };
+  saveState(); render();
+  toast('Rechte Decos von Links gespiegelt');
+});
+
+document.getElementById('sym-from-tl').addEventListener('click', () => {
+  // Alle 4 Ecken vom TL ableiten
+  const tl = state.positions.deco_tl;
+  state.positions.deco_tr = { ...tl, left: 100 - tl.left, rotate: -tl.rotate };
+  state.positions.deco_bl = { ...tl, top: 100 - tl.top };
+  state.positions.deco_br = { ...tl, left: 100 - tl.left, top: 100 - tl.top, rotate: -tl.rotate };
+  saveState(); render();
+  toast('4 Ecken vom TL abgeleitet');
+});
+
+document.getElementById('sym-photos').addEventListener('click', () => {
+  if (state.photoCount === 1) {
+    state.positions.photo1.left = 50;
+  } else if (state.photoCount === 2) {
+    state.positions.photo1.left = 30;
+    state.positions.photo2.left = 70;
+    state.positions.photo2.top = state.positions.photo1.top;
+    state.positions.photo2.size = state.positions.photo1.size;
+  } else if (state.photoCount === 3) {
+    state.positions.photo1.left = 22;
+    state.positions.photo2.left = 50;
+    state.positions.photo3.left = 78;
+    state.positions.photo2.top  = state.positions.photo1.top;
+    state.positions.photo3.top  = state.positions.photo1.top;
+    state.positions.photo2.size = state.positions.photo1.size;
+    state.positions.photo3.size = state.positions.photo1.size;
+  }
+  saveState(); render();
+  toast('Fotos verteilt');
+});
+
+// =========================================================================
+// RESET
+// =========================================================================
+
 document.getElementById('reset-positions').addEventListener('click', () => {
-  state.positions = state.photoCount === 2 ? makeDefaults2Photo() : makeDefaults();
+  state.positions = makeDefaults(state.photoCount);
   state.selectedKey = null;
   saveState(); render();
   toast('Positionen zurückgesetzt');
@@ -561,7 +816,6 @@ function buildJSON() {
     positions: state.positions,
   }, null, 2);
 }
-
 function buildCSS() {
   const p = state.positions;
   const lines = [];
@@ -569,9 +823,9 @@ function buildCSS() {
   lines.push('');
   lines.push(`.blanket-text__hauptzeile { top: ${p.hauptzeile.top}%; left: ${p.hauptzeile.left}%; font-size: ${p.hauptzeile.fontSize}cqw; }`);
   lines.push(`.blanket-text__untertitel { top: ${p.untertitel.top}%; left: ${p.untertitel.left}%; font-size: ${p.untertitel.fontSize}cqw; }`);
-  lines.push(`.blanket-photo[data-slot="1"] { top: ${p.photo1.top}%; left: ${p.photo1.left}%; width: ${p.photo1.size}cqw; height: ${p.photo1.size}cqw; }`);
-  if (state.photoCount === 2) {
-    lines.push(`.blanket-photo[data-slot="2"] { top: ${p.photo2.top}%; left: ${p.photo2.left}%; width: ${p.photo2.size}cqw; height: ${p.photo2.size}cqw; }`);
+  for (let i = 1; i <= state.photoCount; i++) {
+    const k = 'photo' + i;
+    lines.push(`.blanket-photo[data-slot="${i}"] { top: ${p[k].top}%; left: ${p[k].left}%; width: ${p[k].size}cqw; height: ${p[k].size}cqw; }`);
   }
   if (VARIANT_DECO[state.variant]) {
     ['tl','tr','bl','br'].forEach(c => {
@@ -581,30 +835,21 @@ function buildCSS() {
   }
   return lines.join('\n');
 }
-
 const $modal = document.getElementById('modal');
 const $modalTitle = document.getElementById('modal-title');
 const $modalText = document.getElementById('modal-text');
-
 function openModal(title, text) {
   $modalTitle.textContent = title;
   $modalText.value = text;
   $modal.classList.add('open');
 }
 function closeModal() { $modal.classList.remove('open'); }
-
 document.getElementById('export-json').addEventListener('click', () => openModal('JSON Export', buildJSON()));
 document.getElementById('export-css').addEventListener('click', () => openModal('CSS Export', buildCSS()));
 document.getElementById('modal-close').addEventListener('click', closeModal);
 document.getElementById('modal-copy').addEventListener('click', async () => {
-  try {
-    await navigator.clipboard.writeText($modalText.value);
-    toast('In Zwischenablage kopiert');
-  } catch(e){
-    $modalText.select();
-    document.execCommand('copy');
-    toast('Kopiert (Fallback)');
-  }
+  try { await navigator.clipboard.writeText($modalText.value); toast('Kopiert'); }
+  catch(e){ $modalText.select(); document.execCommand('copy'); toast('Kopiert (Fallback)'); }
 });
 $modal.addEventListener('click', (ev) => { if (ev.target === $modal) closeModal(); });
 document.addEventListener('keydown', (ev) => { if (ev.key === 'Escape') closeModal(); });
@@ -612,6 +857,7 @@ document.addEventListener('keydown', (ev) => { if (ev.key === 'Escape') closeMod
 // =========================================================================
 // TOAST
 // =========================================================================
+
 const $toast = document.getElementById('toast');
 let toastTimer = null;
 function toast(msg) {
@@ -627,21 +873,21 @@ function toast(msg) {
 
 loadState();
 
-// Sync pickers to loaded state
-document.querySelectorAll(`#variant-picker button[data-variant="${state.variant}"]`).forEach(b => b.classList.add('active'));
-document.querySelectorAll(`#variant-picker button:not([data-variant="${state.variant}"])`).forEach(b => b.classList.remove('active'));
-document.querySelectorAll(`#photo-count-picker button[data-count="${state.photoCount}"]`).forEach(b => b.classList.add('active'));
-document.querySelectorAll(`#photo-count-picker button:not([data-count="${state.photoCount}"])`).forEach(b => b.classList.remove('active'));
-document.querySelectorAll(`#material-picker button[data-material="${state.material}"]`).forEach(b => b.classList.add('active'));
-document.querySelectorAll(`#material-picker button:not([data-material="${state.material}"])`).forEach(b => b.classList.remove('active'));
-document.querySelectorAll(`#size-picker button[data-size="${state.size}"]`).forEach(b => b.classList.add('active'));
-document.querySelectorAll(`#size-picker button:not([data-size="${state.size}"])`).forEach(b => b.classList.remove('active'));
+function syncPicker(id, key, val) {
+  document.querySelectorAll(`#${id} button`).forEach(b => {
+    const dataKey = Object.keys(b.dataset)[0];
+    b.classList.toggle('active', String(b.dataset[dataKey]) === String(val));
+  });
+}
+syncPicker('variant-picker', 'variant', state.variant);
+syncPicker('photo-count-picker', 'count', state.photoCount);
+syncPicker('material-picker', 'material', state.material);
+syncPicker('size-picker', 'size', state.size);
+syncPicker('font-hauptzeile-picker', 'font', state.fontHauptzeile);
+syncPicker('font-untertitel-picker', 'font', state.fontUntertitel);
+syncPicker('guides-toggle', 'guides', state.showGuides ? 'on' : 'off');
 document.getElementById('text-hauptzeile').value = state.hauptzeile;
 document.getElementById('text-untertitel').value = state.untertitel;
-document.querySelectorAll(`#font-hauptzeile-picker button[data-font="${state.fontHauptzeile}"]`).forEach(b => b.classList.add('active'));
-document.querySelectorAll(`#font-hauptzeile-picker button:not([data-font="${state.fontHauptzeile}"])`).forEach(b => b.classList.remove('active'));
-document.querySelectorAll(`#font-untertitel-picker button[data-font="${state.fontUntertitel}"]`).forEach(b => b.classList.add('active'));
-document.querySelectorAll(`#font-untertitel-picker button:not([data-font="${state.fontUntertitel}"])`).forEach(b => b.classList.remove('active'));
 
 render();
 </script>
