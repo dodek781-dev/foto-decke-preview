@@ -11,7 +11,7 @@
 <style>
   *,*::before,*::after{box-sizing:border-box}
   html,body{margin:0;padding:0;background:#1f1f23;color:#eaeaea;font-family:'Outfit',system-ui,sans-serif;min-height:100vh}
-  .app{display:grid;grid-template-columns:260px 1fr 320px;height:100vh;overflow:hidden}
+  .app{display:grid;grid-template-columns:280px 1fr 320px;height:100vh;overflow:hidden}
   aside{background:#2a2a30;padding:14px;overflow-y:auto;border-right:1px solid #3a3a42}
   aside.right{border-right:none;border-left:1px solid #3a3a42}
   aside h2{font-size:11px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:#9aa0aa;margin:14px 0 8px;border-bottom:1px solid #3a3a42;padding-bottom:6px}
@@ -22,29 +22,48 @@
   .ctrl-row button:hover:not(.active){background:#46464f}
   .ctrl-stack button{display:block;width:100%;margin-bottom:6px;padding:8px;background:#3a3a42;color:#eaeaea;border:1px solid #4a4a55;border-radius:5px;cursor:pointer;font-size:12px;font-family:inherit;text-align:left}
   .ctrl-stack button:hover{background:#46464f}
+  /* Template-Picker grid: 2 columns of icon+label */
+  .template-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:10px}
+  .template-grid button{
+    background:#3a3a42;color:#eaeaea;border:1px solid #4a4a55;
+    border-radius:5px;cursor:pointer;font-family:inherit;font-size:11px;
+    padding:8px 4px 6px;
+    display:flex;flex-direction:column;align-items:center;gap:4px;
+  }
+  .template-grid button.active{background:#7c5aff;border-color:#9678ff}
+  .template-grid button:hover:not(.active){background:#46464f}
+  .template-grid .ti{display:block;width:36px;height:48px;background:#0e0e10;border-radius:2px;position:relative;flex-shrink:0}
+  .template-grid .ti::before,.template-grid .ti::after,.template-grid .ti span{position:absolute;background:#7c5aff;border-radius:1px}
+  /* Template icons via flex children */
   label{display:block;font-size:11px;color:#9aa0aa;margin:8px 0 3px}
-  input[type="number"],input[type="text"]{width:100%;padding:6px 8px;background:#1f1f23;color:#eaeaea;border:1px solid #4a4a55;border-radius:4px;font-family:inherit;font-size:12px}
-  input[type="number"]:focus,input[type="text"]:focus{outline:none;border-color:#7c5aff}
+  input[type="text"]{width:100%;padding:6px 8px;background:#1f1f23;color:#eaeaea;border:1px solid #4a4a55;border-radius:4px;font-family:inherit;font-size:12px}
+  input[type="text"]:focus{outline:none;border-color:#7c5aff}
   textarea{width:100%;padding:8px;background:#1a1a1e;color:#eaeaea;border:1px solid #4a4a55;border-radius:4px;font-family:'JetBrains Mono','Menlo',monospace;font-size:11px;line-height:1.4;resize:vertical;min-height:120px}
 
   .stage{display:flex;align-items:center;justify-content:center;background:#0e0e10;padding:20px;overflow:auto}
   .blanket-frame{
-    --blanket-aspect:1.4;
+    --blanket-aspect:0.7;
+    --photo-radius:0px;
     position:relative;
-    width:min(80vh,720px);
-    aspect-ratio:var(--blanket-aspect);
-    max-width:calc(100vw - 600px);
     background:#fafaf8 center/cover no-repeat;
-    border-radius:4px;
+    border-radius:6px;
     overflow:visible;
     box-shadow:0 22px 50px rgba(0,0,0,.5),0 10px 22px rgba(0,0,0,.3);
     container-type:inline-size;
   }
-  /* clip content but show handles outside */
-  .blanket-frame::before{content:'';position:absolute;inset:0;background:inherit;border-radius:4px;z-index:-1}
+  /* Frame-Größe so dass beide Orientations gut sichtbar sind */
+  .blanket-frame.landscape{
+    width:min(82vh, calc((100vw - 660px) * 0.92));
+    aspect-ratio:var(--blanket-aspect);
+  }
+  .blanket-frame.portrait{
+    height:min(86vh, 760px);
+    aspect-ratio:var(--blanket-aspect);
+  }
   .blanket-frame[data-material="caramel"]{background-image:url('assets/textures/caramel.jpg')}
   .blanket-frame[data-material="gray"]{background-image:url('assets/textures/gray.jpg')}
   .blanket-frame[data-material="black"]{background-image:url('assets/textures/black.jpg')}
+  .blanket-frame[data-material="white"]{background:#fafaf8}
 
   /* Hilfslinien */
   .guide-line{position:absolute;background:rgba(124,90,255,.55);pointer-events:none;z-index:5}
@@ -64,12 +83,12 @@
   .blanket-frame.snap-v .snap-line.v{display:block}
   .blanket-frame.snap-h .snap-line.h{display:block}
 
-  /* Draggable elements */
+  /* Draggable */
   .draggable{position:absolute;cursor:grab;user-select:none;touch-action:none}
   .draggable.dragging{cursor:grabbing;z-index:10}
   .draggable.selected{outline:2px dashed #7c5aff;outline-offset:3px}
 
-  /* Pos-Badge: zeigt left%/top% — bei hover, selected, dragging */
+  /* Pos-Badge */
   .pos-badge{
     position:absolute;
     top:-22px;left:50%;transform:translateX(-50%);
@@ -85,26 +104,7 @@
   .draggable.selected .pos-badge,
   .draggable.dragging .pos-badge{opacity:1}
 
-  /* Rotation-Handle */
-  .rot-handle{
-    position:absolute;
-    top:-32px;left:50%;
-    width:14px;height:14px;
-    margin-left:-7px;
-    background:#fff;border:2px solid #7c5aff;border-radius:50%;
-    cursor:grab;
-    z-index:25;
-    box-shadow:0 2px 4px rgba(0,0,0,.4);
-  }
-  .rot-handle::before{
-    content:'';position:absolute;
-    top:14px;left:50%;width:1px;height:18px;
-    margin-left:-.5px;
-    background:#7c5aff;
-  }
-  .rot-handle:active{cursor:grabbing}
-
-  /* Resize-Handle */
+  /* Resize-Handle (corner) — free-form W+H */
   .resize-handle{
     position:absolute;
     bottom:-7px;right:-7px;
@@ -115,8 +115,28 @@
     box-shadow:0 2px 4px rgba(0,0,0,.4);
   }
   .resize-handle:active{cursor:grabbing}
+  /* Edge-Handles für 1-Achse-Resize */
+  .resize-edge{
+    position:absolute;
+    background:#7c5aff;border:2px solid #fff;border-radius:2px;
+    z-index:24;box-shadow:0 1px 3px rgba(0,0,0,.4);
+  }
+  .resize-edge.right{top:50%;right:-7px;width:10px;height:14px;margin-top:-7px;cursor:ew-resize}
+  .resize-edge.bottom{left:50%;bottom:-7px;width:14px;height:10px;margin-left:-7px;cursor:ns-resize}
 
-  /* Element-spezifisch */
+  /* Photo-Cell (Rechteck statt Kreis) */
+  .el-photo-rect{
+    transform:translate(-50%,-50%);
+    border-radius:var(--photo-radius);
+    background:rgba(0,0,0,.05);
+    box-shadow:0 4px 12px rgba(0,0,0,.25);
+  }
+  .el-photo-rect img{
+    width:100%;height:100%;object-fit:cover;display:block;
+    border-radius:inherit;
+  }
+
+  /* Texts */
   .el-hauptzeile,.el-untertitel{
     color:#1a1a1a;
     line-height:1.05;letter-spacing:.01em;
@@ -128,27 +148,12 @@
   .font-script{font-family:'parlare',cursive;font-weight:400}
   .font-serif{font-family:'Playfair Display',Georgia,serif;font-weight:700}
   .font-sans{font-family:'Outfit',system-ui,sans-serif;font-weight:500}
-  .el-hauptzeile{font-size:11cqw}
-  .el-untertitel{font-size:3.2cqw}
+  .el-hauptzeile{font-size:8cqw}
+  .el-untertitel{font-size:2.6cqw}
   .blanket-frame[data-material="black"] .el-hauptzeile,
   .blanket-frame[data-material="black"] .el-untertitel{color:#fafafa}
 
-  .el-photo{
-    border-radius:50%;
-    background:rgba(0,0,0,.05);
-    box-shadow:0 0 0 0.7cqw #000;
-    transform:translate(-50%,-50%);
-    /* overflow:visible damit Handles und Badge sichtbar sind.
-     * Kreis-Form kommt vom border-radius:50% am img. */
-  }
-  .el-photo img{width:100%;height:100%;object-fit:cover;display:block;border-radius:50%}
-  .el-photo .pos-badge{transform:translate(-50%,0);left:50%}
-
-  .el-deco{transform:translate(-50%,-50%) rotate(var(--rot,0deg))}
-  .el-deco img{display:block;width:100%;height:auto;pointer-events:none}
-  .blanket-frame[data-material="black"] .el-deco img{filter:invert(1)}
-
-  /* Right sidebar element controls */
+  /* Right sidebar */
   .el-control{padding:8px;background:#33333a;border:1px solid #4a4a55;border-radius:5px;margin-bottom:8px}
   .el-control-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
   .el-control-header strong{font-size:12px}
@@ -181,26 +186,14 @@
 
   <!-- =========== LEFT SIDEBAR =========== -->
   <aside class="left">
-    <h2>Variante</h2>
-    <div class="ctrl-row" id="variant-picker">
-      <button data-variant="mensch" class="active">Mensch</button>
-      <button data-variant="hund">Hund</button>
-      <button data-variant="katze">Katze</button>
-      <button data-variant="pferd">Pferd</button>
-    </div>
-
-    <h2>Foto-Anzahl</h2>
-    <div class="ctrl-row" id="photo-count-picker">
-      <button data-count="1" class="active">1 Foto</button>
-      <button data-count="2">2 Fotos</button>
-      <button data-count="3">3 Fotos</button>
-    </div>
-
-    <h2>Material</h2>
-    <div class="ctrl-row" id="material-picker">
-      <button data-material="caramel" class="active">Caramel</button>
-      <button data-material="gray">Grau</button>
-      <button data-material="black">Schwarz</button>
+    <h2>Layout-Template</h2>
+    <div class="template-grid" id="template-picker">
+      <button data-template="1-foto"><span class="ti" data-icon="1"></span>1 Foto</button>
+      <button data-template="2-side"><span class="ti" data-icon="2side"></span>2 Quer</button>
+      <button data-template="2-stack"><span class="ti" data-icon="2stack"></span>2 Hoch</button>
+      <button data-template="4-grid"><span class="ti" data-icon="4"></span>4 Grid</button>
+      <button data-template="5-3plus2" class="active"><span class="ti" data-icon="5"></span>5 (3+2)</button>
+      <button data-template="6-grid"><span class="ti" data-icon="6"></span>6 Grid</button>
     </div>
 
     <h2>Größe</h2>
@@ -212,15 +205,31 @@
 
     <h2>Orientierung</h2>
     <div class="ctrl-row" id="orientation-picker">
-      <button data-orientation="landscape" class="active">Querformat</button>
-      <button data-orientation="portrait">Hochformat</button>
+      <button data-orientation="landscape">Querformat</button>
+      <button data-orientation="portrait" class="active">Hochformat</button>
     </div>
 
-    <h2>Texte</h2>
+    <h2>Material</h2>
+    <div class="ctrl-row" id="material-picker">
+      <button data-material="white" class="active">Weiß</button>
+      <button data-material="gray">Grau</button>
+      <button data-material="black">Schwarz</button>
+      <button data-material="caramel">Caramel</button>
+    </div>
+
+    <h2>Eckenradius Photos</h2>
+    <div class="ctrl-row" id="radius-picker">
+      <button data-radius="0" class="active">Scharf</button>
+      <button data-radius="0.5">Leicht</button>
+      <button data-radius="1.5">Mittel</button>
+      <button data-radius="3">Stark</button>
+    </div>
+
+    <h2>Texte (optional)</h2>
     <label>Hauptzeile</label>
-    <input type="text" id="text-hauptzeile" value="Willkommen bei BALU">
+    <input type="text" id="text-hauptzeile" value="">
     <label>Untertitel</label>
-    <input type="text" id="text-untertitel" value="FAMILIE MÜLLER LEBT HIER AUCH...">
+    <input type="text" id="text-untertitel" value="">
 
     <h2>Schriftstil — Hauptzeile</h2>
     <div class="ctrl-row" id="font-hauptzeile-picker">
@@ -229,47 +238,36 @@
       <button data-font="sans">Modern</button>
     </div>
 
-    <h2>Schriftstil — Untertitel</h2>
-    <div class="ctrl-row" id="font-untertitel-picker">
-      <button data-font="sans" class="active">Modern</button>
-      <button data-font="serif">Elegant</button>
-      <button data-font="script">Verspielt</button>
-    </div>
-
     <h2>Hilfslinien</h2>
     <div class="ctrl-row" id="guides-toggle">
       <button data-guides="on" class="active">An</button>
       <button data-guides="off">Aus</button>
     </div>
-    <p class="hint">Lila = Mitte (50%), weiß = 25/75%. Gelb leuchtet wenn Element auf Mitte snappt. Shift während Drag = kein Snap.</p>
+    <p class="hint">Lila = Mitte, gelb = Snap-on.</p>
 
     <h2>Symmetrie</h2>
     <div class="ctrl-stack">
-      <button id="sym-mirror-lr">⇄ Spiegeln links → rechts (Decos)</button>
-      <button id="sym-from-tl">↘ 4 Ecken vom TL ableiten</button>
-      <button id="sym-photos">⇄ Fotos auto-verteilen</button>
+      <button id="sym-photos">Aktuelles Template Defaults wiederherstellen</button>
     </div>
-    <p class="hint">Spiegelt linke Decos auf rechte Seite, oder verteilt Fotos gleichmäßig.</p>
 
     <h2>Reset</h2>
     <div class="export-buttons">
-      <button class="secondary" id="reset-positions">Positionen zurücksetzen</button>
       <button class="secondary" id="reset-storage">localStorage löschen</button>
     </div>
 
-    <p class="hint">Klick Element → selektiert. Drag = verschieben. Lila Kreis oben = drehen. Lila Quadrat unten-rechts = größer/kleiner.</p>
+    <p class="hint">Klick Cell → selektiert. Drag = verschieben. Lila Quadrat unten-rechts = freie Größenänderung. Edge-Handles = einzelne Achse.</p>
   </aside>
 
   <!-- =========== STAGE =========== -->
   <div class="stage">
-    <div class="blanket-frame show-guides" id="frame" data-material="caramel"></div>
+    <div class="blanket-frame portrait show-guides" id="frame" data-material="white"></div>
   </div>
 
   <!-- =========== RIGHT SIDEBAR =========== -->
   <aside class="right">
     <h2>Selektiertes Element</h2>
     <div id="el-controls">
-      <p class="hint">Klick ein Element auf der Matte an, um es hier zu editieren.</p>
+      <p class="hint">Klick eine Cell auf der Decke an, um sie hier zu editieren.</p>
     </div>
 
     <h2>Export</h2>
@@ -277,7 +275,7 @@
       <button id="export-json">JSON anzeigen</button>
       <button id="export-css">CSS anzeigen</button>
     </div>
-    <p class="hint">JSON ist am einfachsten — paste mir den Block, ich übernehme die Werte 1:1 in render.css.</p>
+    <p class="hint">JSON paste mir → ich übernehme 1:1 in render.css.</p>
   </aside>
 
 </div>
@@ -300,116 +298,161 @@
 'use strict';
 
 // =========================================================================
-// CONFIG / DEFAULTS
+// CONFIG / TEMPLATES
 // =========================================================================
 
-const VARIANT_DECO = {
-  mensch: null,
-  hund:   'assets/decorations/pfote.png',
-  katze:  'assets/decorations/pfote.png',
-  pferd:  'assets/decorations/hufeisen.png',
-};
-
-/* Decken-Aspects: Querformat = lange/kurze Seite, Hochformat = invers */
+/* Aspect Ratios — Querformat. Hochformat = 1/landscape */
 const ASPECT_LANDSCAPE = {
-  '100x70':  100/70,   // 1.4286
-  '150x100': 150/100,  // 1.5
-  '200x150': 200/150,  // 1.3333
+  '100x70':  100/70,
+  '150x100': 150/100,
+  '200x150': 200/150,
 };
 function currentAspect() {
   const base = ASPECT_LANDSCAPE[state.size] || 1.43;
   return state.orientation === 'portrait' ? 1/base : base;
 }
 
-function makeDefaults1Photo() {
-  return {
-    hauptzeile: { top: 13, left: 50, fontSize: 11 },
-    untertitel: { top: 86, left: 50, fontSize: 3.2 },
-    photo1:     { top: 50, left: 50, size: 40 },
-    photo2:     { top: 50, left: 70, size: 40 },
-    photo3:     { top: 50, left: 75, size: 30 },
-    deco_tl:    { top: 36, left: 22, size: 11, rotate: -15 },
-    deco_tr:    { top: 36, left: 78, size: 11, rotate: 15 },
-    deco_bl:    { top: 62, left:  8, size: 11, rotate: -15 },
-    deco_br:    { top: 62, left: 92, size: 11, rotate: 15 },
-  };
-}
-function makeDefaults2Photo() {
-  return {
-    hauptzeile: { top: 13, left: 50, fontSize: 11 },
-    untertitel: { top: 86, left: 50, fontSize: 3.2 },
-    photo1:     { top: 50, left: 30, size: 40 },
-    photo2:     { top: 50, left: 70, size: 40 },
-    photo3:     { top: 50, left: 75, size: 30 },
-    deco_tl:    { top:  9, left:  6, size:  7, rotate: -15 },
-    deco_tr:    { top:  9, left: 94, size:  7, rotate: 15 },
-    deco_bl:    { top: 91, left:  6, size:  7, rotate: -15 },
-    deco_br:    { top: 91, left: 94, size:  7, rotate: 15 },
-  };
-}
-function makeDefaults3Photo() {
-  return {
-    hauptzeile: { top: 13, left: 50, fontSize: 11 },
-    untertitel: { top: 86, left: 50, fontSize: 3.2 },
-    photo1:     { top: 50, left: 22, size: 30 },
-    photo2:     { top: 50, left: 50, size: 30 },
-    photo3:     { top: 50, left: 78, size: 30 },
-    deco_tl:    { top:  9, left:  6, size:  6, rotate: -15 },
-    deco_tr:    { top:  9, left: 94, size:  6, rotate: 15 },
-    deco_bl:    { top: 91, left:  6, size:  6, rotate: -15 },
-    deco_br:    { top: 91, left: 94, size:  6, rotate: 15 },
-  };
-}
-function makeDefaults(count) {
-  if (count === 2) return makeDefaults2Photo();
-  if (count === 3) return makeDefaults3Photo();
-  return makeDefaults1Photo();
-}
+/* Photo-Cell-Defaults pro Template — alle Werte als % der Frame-Maße.
+ * Cells haben width + height (separat — Decke-Photos sind Rechtecke). */
+const TEMPLATE_DEFAULTS = {
+  /* 1-Foto: full-bleed, 90% × 85% */
+  '1-foto': {
+    landscape: [{top:50,left:50,width:90,height:85}],
+    portrait:  [{top:50,left:50,width:85,height:90}],
+  },
+  /* 2-Side: 2 Photos nebeneinander */
+  '2-side': {
+    landscape: [
+      {top:50,left:25,width:42,height:80},
+      {top:50,left:75,width:42,height:80},
+    ],
+    portrait: [
+      {top:50,left:25,width:45,height:80},
+      {top:50,left:75,width:45,height:80},
+    ],
+  },
+  /* 2-Stack: 2 Photos übereinander */
+  '2-stack': {
+    landscape: [
+      {top:25,left:50,width:90,height:38},
+      {top:75,left:50,width:90,height:38},
+    ],
+    portrait: [
+      {top:25,left:50,width:85,height:42},
+      {top:75,left:50,width:85,height:42},
+    ],
+  },
+  /* 4-Grid: 2x2 */
+  '4-grid': {
+    landscape: [
+      {top:25,left:25,width:42,height:38}, {top:25,left:75,width:42,height:38},
+      {top:75,left:25,width:42,height:38}, {top:75,left:75,width:42,height:38},
+    ],
+    portrait: [
+      {top:25,left:25,width:42,height:42}, {top:25,left:75,width:42,height:42},
+      {top:75,left:25,width:42,height:42}, {top:75,left:75,width:42,height:42},
+    ],
+  },
+  /* 5-3plus2: Shutterfly-Pattern (User-Vorlage 2026-05-07).
+   * Hochformat: linke Spalte 3 kleine Cells, rechte Spalte 2 größere. */
+  '5-3plus2': {
+    portrait: [
+      // Linke Spalte (x:5-35, also center 20%)
+      {top:19,left:20,width:30,height:27},
+      {top:50,left:20,width:30,height:27},
+      {top:81,left:20,width:30,height:27},
+      // Rechte Spalte (x:38-94, also center 66%)
+      {top:25,left:66,width:56,height:38},
+      {top:70,left:66,width:56,height:43},
+    ],
+    landscape: [
+      // 90° gedreht: oben 3 Cells, unten 2 Cells
+      {top:20,left:19,width:27,height:30},
+      {top:20,left:50,width:27,height:30},
+      {top:20,left:81,width:27,height:30},
+      {top:66,left:25,width:38,height:56},
+      {top:66,left:70,width:43,height:56},
+    ],
+  },
+  /* 6-Grid: 3x2 oder 2x3 je nach Orientation */
+  '6-grid': {
+    landscape: [  // 3 cols × 2 rows
+      {top:30,left:18,width:28,height:40}, {top:30,left:50,width:28,height:40}, {top:30,left:82,width:28,height:40},
+      {top:75,left:18,width:28,height:40}, {top:75,left:50,width:28,height:40}, {top:75,left:82,width:28,height:40},
+    ],
+    portrait: [  // 2 cols × 3 rows
+      {top:18,left:25,width:42,height:28}, {top:18,left:75,width:42,height:28},
+      {top:50,left:25,width:42,height:28}, {top:50,left:75,width:42,height:28},
+      {top:82,left:25,width:42,height:28}, {top:82,left:75,width:42,height:28},
+    ],
+  },
+};
+
+const TEMPLATE_LABELS = {
+  '1-foto':'1 Foto', '2-side':'2 Querseite', '2-stack':'2 Übereinander',
+  '4-grid':'4 Grid', '5-3plus2':'5 (3+2)', '6-grid':'6 Grid',
+};
+const SIZE_LABELS = { '100x70':'100×70 cm', '150x100':'150×100 cm', '200x150':'200×150 cm' };
 
 const DEFAULT_PHOTO = 'assets/photo-mockup-default.jpg';
 const ELEMENT_LABELS = {
-  hauptzeile: 'Hauptzeile',
-  untertitel: 'Untertitel',
-  photo1: 'Foto 1', photo2: 'Foto 2', photo3: 'Foto 3',
-  deco_tl: 'Deko ↖ TL', deco_tr: 'Deko ↗ TR',
-  deco_bl: 'Deko ↙ BL', deco_br: 'Deko ↘ BR',
+  hauptzeile:'Hauptzeile', untertitel:'Untertitel',
+  photo1:'Foto 1', photo2:'Foto 2', photo3:'Foto 3',
+  photo4:'Foto 4', photo5:'Foto 5', photo6:'Foto 6',
 };
 
-const SNAP_TOLERANCE = 2;       // % distance for snap to 50
-const ROT_SNAP_TOLERANCE = 3;   // degrees for rotation snap (with shift)
-const ROT_SNAP_VALUES = [0, 15, 30, 45, 60, 90, 180, -15, -30, -45, -60, -90, -180];
+const SNAP_TOLERANCE = 2;
 
 // =========================================================================
 // STATE
 // =========================================================================
 
+function makeTextDefaults() {
+  return {
+    hauptzeile: { top: 6, left: 50, fontSize: 8 },
+    untertitel: { top: 95, left: 50, fontSize: 2.6 },
+  };
+}
+
+function buildPositionsForTemplate(tmpl, orientation) {
+  const cells = TEMPLATE_DEFAULTS[tmpl][orientation] || TEMPLATE_DEFAULTS[tmpl].landscape;
+  const positions = makeTextDefaults();
+  cells.forEach((cell, i) => {
+    positions['photo' + (i+1)] = { ...cell };
+  });
+  return positions;
+}
+
 const state = {
-  variant: 'mensch',
-  photoCount: 1,
-  material: 'caramel',
+  template: '5-3plus2',
   size: '100x70',
-  orientation: 'landscape',
-  hauptzeile: 'Willkommen',
-  untertitel: 'BEI FAMILIE MÜLLER',
+  orientation: 'portrait',
+  material: 'white',
+  photoRadius: 0,                   // in cqw
+  hauptzeile: '',
+  untertitel: '',
   fontHauptzeile: 'script',
   fontUntertitel: 'sans',
   showGuides: true,
-  positions: makeDefaults1Photo(),
+  positions: buildPositionsForTemplate('5-3plus2', 'portrait'),
   selectedKey: null,
 };
 
-const STORAGE_KEY = 'foto-decke-blanket-positioning-tool-v1';
+const STORAGE_KEY = 'foto-decke-blanket-positioning-tool-v2';
 
 function loadState() {
   try {
     const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || 'null');
-    if (saved && saved.version === 1) {
-      Object.assign(state, saved.state);
-    }
+    if (saved && saved.version === 2) Object.assign(state, saved.state);
   } catch(e){}
 }
 function saveState() {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify({ version: 1, state }));
+  localStorage.setItem(STORAGE_KEY, JSON.stringify({ version: 2, state }));
+}
+
+function photoCount() {
+  return TEMPLATE_DEFAULTS[state.template][state.orientation]?.length
+      || TEMPLATE_DEFAULTS[state.template].landscape.length;
 }
 
 // =========================================================================
@@ -421,7 +464,10 @@ const $frame = document.getElementById('frame');
 function render() {
   $frame.dataset.material = state.material;
   $frame.style.setProperty('--blanket-aspect', currentAspect());
+  $frame.style.setProperty('--photo-radius', state.photoRadius + 'cqw');
   $frame.classList.toggle('show-guides', state.showGuides);
+  $frame.classList.toggle('landscape', state.orientation === 'landscape');
+  $frame.classList.toggle('portrait',  state.orientation === 'portrait');
   $frame.innerHTML = '';
 
   // Hilfslinien
@@ -430,54 +476,23 @@ function render() {
     ln.className = 'guide-line ' + cls;
     $frame.appendChild(ln);
   });
-  // Snap-Glow-Lines (immer im DOM, sichtbar via .snap-v / .snap-h auf Frame)
   const snapV = document.createElement('div'); snapV.className='snap-line v'; $frame.appendChild(snapV);
   const snapH = document.createElement('div'); snapH.className='snap-line h'; $frame.appendChild(snapH);
 
-  // Texts
-  buildElement('hauptzeile', { tag: 'h2', class: `el-hauptzeile font-${state.fontHauptzeile} draggable`, text: state.hauptzeile });
-  buildElement('untertitel', { tag: 'p',  class: `el-untertitel font-${state.fontUntertitel} draggable`, text: state.untertitel });
+  // Texts (immer da, aber leer wenn kein Text)
+  if (state.hauptzeile.trim()) buildText('hauptzeile', { tag:'h2', class:`el-hauptzeile font-${state.fontHauptzeile} draggable`, text: state.hauptzeile });
+  if (state.untertitel.trim()) buildText('untertitel', { tag:'p',  class:`el-untertitel font-${state.fontUntertitel} draggable`, text: state.untertitel });
 
-  // Photos
-  for (let i = 1; i <= state.photoCount; i++) buildPhoto('photo' + i);
-
-  // Decorations
-  if (VARIANT_DECO[state.variant]) {
-    ['deco_tl','deco_tr','deco_bl','deco_br'].forEach(k => buildDeco(k));
-  }
+  // Photos basierend auf Template
+  const count = photoCount();
+  for (let i = 1; i <= count; i++) buildPhotoRect('photo' + i);
 
   renderElementControls();
 }
 
-function attachHandles(el, key, opts) {
-  // Pos-Badge immer
-  const badge = document.createElement('span');
-  badge.className = 'pos-badge';
-  badge.dataset.role = 'badge';
-  el.appendChild(badge);
-  updateBadge(el, state.positions[key]);
-
-  // Wenn selected: Rotate + Resize Handles
-  if (state.selectedKey === key) {
-    if (opts.rotatable) {
-      const rh = document.createElement('span');
-      rh.className = 'rot-handle';
-      rh.dataset.role = 'rotate';
-      el.appendChild(rh);
-      attachRotate(rh, el, key);
-    }
-    if (opts.resizable) {
-      const rsh = document.createElement('span');
-      rsh.className = 'resize-handle';
-      rsh.dataset.role = 'resize';
-      el.appendChild(rsh);
-      attachResize(rsh, el, key);
-    }
-  }
-}
-
-function buildElement(key, opts) {
+function buildText(key, opts) {
   const pos = state.positions[key];
+  if (!pos) return;
   const el = document.createElement(opts.tag);
   el.className = opts.class;
   el.dataset.key = key;
@@ -487,59 +502,85 @@ function buildElement(key, opts) {
   if (pos.fontSize) el.style.fontSize = pos.fontSize + 'cqw';
   if (state.selectedKey === key) el.classList.add('selected');
   attachDrag(el, key);
-  attachHandles(el, key, { rotatable: false, resizable: true });
+  attachHandles(el, key, { isText: true });
   $frame.appendChild(el);
 }
 
-function buildPhoto(key) {
+function buildPhotoRect(key) {
   const pos = state.positions[key];
+  if (!pos) return;
   const wrap = document.createElement('div');
-  wrap.className = 'el-photo draggable';
+  wrap.className = 'el-photo-rect draggable';
   wrap.dataset.key = key;
   wrap.style.top  = pos.top + '%';
   wrap.style.left = pos.left + '%';
-  wrap.style.width  = pos.size + 'cqw';
-  wrap.style.height = pos.size + 'cqw';
+  wrap.style.width  = pos.width + '%';
+  wrap.style.height = pos.height + '%';
   if (state.selectedKey === key) wrap.classList.add('selected');
   const img = document.createElement('img');
   img.src = DEFAULT_PHOTO; img.alt = '';
   wrap.appendChild(img);
   attachDrag(wrap, key);
-  attachHandles(wrap, key, { rotatable: false, resizable: true });
+  attachHandles(wrap, key, { isPhoto: true });
   $frame.appendChild(wrap);
 }
 
-function buildDeco(key) {
-  const pos = state.positions[key];
-  const wrap = document.createElement('div');
-  wrap.className = 'el-deco draggable';
-  wrap.dataset.key = key;
-  wrap.style.top  = pos.top + '%';
-  wrap.style.left = pos.left + '%';
-  wrap.style.width = pos.size + 'cqw';
-  wrap.style.setProperty('--rot', pos.rotate + 'deg');
-  if (state.selectedKey === key) wrap.classList.add('selected');
-  const img = document.createElement('img');
-  img.src = VARIANT_DECO[state.variant]; img.alt = '';
-  wrap.appendChild(img);
-  attachDrag(wrap, key);
-  attachHandles(wrap, key, { rotatable: true, resizable: true });
-  $frame.appendChild(wrap);
+function attachHandles(el, key, opts) {
+  // Pos-Badge immer
+  const badge = document.createElement('span');
+  badge.className = 'pos-badge';
+  badge.dataset.role = 'badge';
+  el.appendChild(badge);
+  updateBadge(el, state.positions[key], opts);
+
+  if (state.selectedKey === key) {
+    if (opts.isPhoto) {
+      // Corner free-form (W+H)
+      const rsh = document.createElement('span');
+      rsh.className = 'resize-handle';
+      rsh.dataset.role = 'resize';
+      el.appendChild(rsh);
+      attachResizeFree(rsh, el, key);
+      // Right edge (W only)
+      const re = document.createElement('span');
+      re.className = 'resize-edge right';
+      re.dataset.role = 'resize-edge';
+      el.appendChild(re);
+      attachResizeAxis(re, el, key, 'width');
+      // Bottom edge (H only)
+      const be = document.createElement('span');
+      be.className = 'resize-edge bottom';
+      be.dataset.role = 'resize-edge';
+      el.appendChild(be);
+      attachResizeAxis(be, el, key, 'height');
+    } else if (opts.isText) {
+      // Text: Corner = font-size resize
+      const rsh = document.createElement('span');
+      rsh.className = 'resize-handle';
+      rsh.dataset.role = 'resize';
+      el.appendChild(rsh);
+      attachResizeFontSize(rsh, el, key);
+    }
+  }
 }
 
-function updateBadge(el, pos) {
+function updateBadge(el, pos, opts) {
   const badge = el.querySelector('.pos-badge');
-  if (badge) badge.textContent = `${pos.left.toFixed(1)}%, ${pos.top.toFixed(1)}%`;
+  if (!badge) return;
+  if (opts && opts.isPhoto) {
+    badge.textContent = `${pos.left.toFixed(1)}, ${pos.top.toFixed(1)} · ${pos.width.toFixed(0)}×${pos.height.toFixed(0)}`;
+  } else {
+    badge.textContent = `${pos.left.toFixed(1)}%, ${pos.top.toFixed(1)}%`;
+  }
 }
 
 // =========================================================================
-// DRAG with Snap-to-Center
+// DRAG
 // =========================================================================
 
 function attachDrag(el, key) {
   el.addEventListener('pointerdown', (ev) => {
-    // Ignore if click was on a sub-handle (rotate/resize/badge)
-    if (ev.target !== el && ev.target.dataset.role) return;
+    if (ev.target !== el && ev.target.dataset && ev.target.dataset.role) return;
     ev.preventDefault();
     state.selectedKey = key;
     el.setPointerCapture(ev.pointerId);
@@ -549,24 +590,20 @@ function attachDrag(el, key) {
     const startPos = { ...state.positions[key] };
 
     const onMove = (mv) => {
-      const dx = mv.clientX - startX;
-      const dy = mv.clientY - startY;
+      const dx = mv.clientX - startX, dy = mv.clientY - startY;
       let newLeft = clamp(startPos.left + (dx / frameRect.width) * 100, 0, 100);
       let newTop  = clamp(startPos.top  + (dy / frameRect.height) * 100, 0, 100);
-      // Snap-to-Center (unless Shift)
       if (!mv.shiftKey) {
         if (Math.abs(newLeft - 50) < SNAP_TOLERANCE) { newLeft = 50; $frame.classList.add('snap-v'); }
         else $frame.classList.remove('snap-v');
-        if (Math.abs(newTop - 50)  < SNAP_TOLERANCE) { newTop  = 50; $frame.classList.add('snap-h'); }
+        if (Math.abs(newTop - 50) < SNAP_TOLERANCE) { newTop = 50; $frame.classList.add('snap-h'); }
         else $frame.classList.remove('snap-h');
-      } else {
-        $frame.classList.remove('snap-v','snap-h');
-      }
+      } else $frame.classList.remove('snap-v','snap-h');
       state.positions[key].left = +newLeft.toFixed(2);
       state.positions[key].top  = +newTop.toFixed(2);
       el.style.left = newLeft + '%';
       el.style.top  = newTop  + '%';
-      updateBadge(el, state.positions[key]);
+      updateBadge(el, state.positions[key], { isPhoto: key.startsWith('photo') });
       renderElementControls();
     };
     const onUp = () => {
@@ -574,43 +611,65 @@ function attachDrag(el, key) {
       $frame.classList.remove('snap-v','snap-h');
       document.removeEventListener('pointermove', onMove);
       document.removeEventListener('pointerup', onUp);
-      saveState();
-      render();   // re-render to bring up handles for new selection
+      saveState(); render();
     };
     document.addEventListener('pointermove', onMove);
     document.addEventListener('pointerup', onUp);
-    render();    // bring up handles immediately on click
+    render();
   });
 }
 
 // =========================================================================
-// ROTATE-Handle Drag
+// RESIZE — Photos
 // =========================================================================
 
-function attachRotate(handle, el, key) {
+function attachResizeFree(handle, el, key) {
   handle.addEventListener('pointerdown', (ev) => {
     ev.preventDefault(); ev.stopPropagation();
     handle.setPointerCapture(ev.pointerId);
-    const elRect = el.getBoundingClientRect();
-    const cx = elRect.left + elRect.width / 2;
-    const cy = elRect.top  + elRect.height / 2;
-    const startAngle = Math.atan2(ev.clientY - cy, ev.clientX - cx) * 180 / Math.PI;
-    const startRot = state.positions[key].rotate || 0;
+    const frameRect = $frame.getBoundingClientRect();
+    const startX = ev.clientX, startY = ev.clientY;
+    const startW = state.positions[key].width;
+    const startH = state.positions[key].height;
 
     const onMove = (mv) => {
-      const angle = Math.atan2(mv.clientY - cy, mv.clientX - cx) * 180 / Math.PI;
-      let newRot = startRot + (angle - startAngle);
-      // normalize to -180..180
-      while (newRot > 180) newRot -= 360;
-      while (newRot < -180) newRot += 360;
-      // Snap with Shift
-      if (mv.shiftKey) {
-        for (const v of ROT_SNAP_VALUES) {
-          if (Math.abs(newRot - v) < ROT_SNAP_TOLERANCE) { newRot = v; break; }
-        }
-      }
-      state.positions[key].rotate = +newRot.toFixed(1);
-      el.style.setProperty('--rot', newRot + 'deg');
+      const dxPct = ((mv.clientX - startX) / frameRect.width) * 100;
+      const dyPct = ((mv.clientY - startY) / frameRect.height) * 100;
+      // Cell ist zentriert via translate(-50%,-50%) → drag-corner = +/- in beide Richtungen → faktor 2
+      const newW = clamp(startW + dxPct * 2, 5, 100);
+      const newH = clamp(startH + dyPct * 2, 5, 100);
+      state.positions[key].width = +newW.toFixed(2);
+      state.positions[key].height = +newH.toFixed(2);
+      el.style.width = newW + '%';
+      el.style.height = newH + '%';
+      updateBadge(el, state.positions[key], { isPhoto: true });
+      renderElementControls();
+    };
+    const onUp = () => {
+      document.removeEventListener('pointermove', onMove);
+      document.removeEventListener('pointerup', onUp);
+      saveState();
+    };
+    document.addEventListener('pointermove', onMove);
+    document.addEventListener('pointerup', onUp);
+  });
+}
+
+function attachResizeAxis(handle, el, key, axis) {
+  handle.addEventListener('pointerdown', (ev) => {
+    ev.preventDefault(); ev.stopPropagation();
+    handle.setPointerCapture(ev.pointerId);
+    const frameRect = $frame.getBoundingClientRect();
+    const startX = ev.clientX, startY = ev.clientY;
+    const startVal = state.positions[key][axis];
+    const dim = axis === 'width' ? frameRect.width : frameRect.height;
+
+    const onMove = (mv) => {
+      const dPct = (((axis === 'width' ? mv.clientX - startX : mv.clientY - startY)) / dim) * 100;
+      const newVal = clamp(startVal + dPct * 2, 5, 100);
+      state.positions[key][axis] = +newVal.toFixed(2);
+      el.style[axis] = newVal + '%';
+      updateBadge(el, state.positions[key], { isPhoto: true });
       renderElementControls();
     };
     const onUp = () => {
@@ -624,39 +683,25 @@ function attachRotate(handle, el, key) {
 }
 
 // =========================================================================
-// RESIZE-Handle Drag
+// RESIZE — Text font-size
 // =========================================================================
 
-function attachResize(handle, el, key) {
+function attachResizeFontSize(handle, el, key) {
   handle.addEventListener('pointerdown', (ev) => {
     ev.preventDefault(); ev.stopPropagation();
     handle.setPointerCapture(ev.pointerId);
     const elRect = el.getBoundingClientRect();
-    const frameRect = $frame.getBoundingClientRect();
-    const cx = elRect.left + elRect.width / 2;
-    const cy = elRect.top  + elRect.height / 2;
-    const startDist = Math.hypot(ev.clientX - cx, ev.clientY - cy);
-    const isText = key === 'hauptzeile' || key === 'untertitel';
-    const startSize = isText ? state.positions[key].fontSize : state.positions[key].size;
-    const startScale = startSize / startDist;  // cqw per pixel
+    const cx = elRect.left + elRect.width/2;
+    const cy = elRect.top + elRect.height/2;
+    const startDist = Math.hypot(ev.clientX-cx, ev.clientY-cy);
+    const startFS = state.positions[key].fontSize;
+    const scale = startFS / startDist;
 
     const onMove = (mv) => {
-      const newDist = Math.hypot(mv.clientX - cx, mv.clientY - cy);
-      let newSize = newDist * startScale;
-      // Convert to cqw based on frame width: but we already have cqw scale
-      // Actually: we want size in cqw = (elementSize_px / frame_width_px) * 100 (since cqw is %)
-      // distance is half-diagonal, so element halfDiag in cqw:
-      // for square (photo/deco): size = width = 2*halfSide * cos(45°). Half-diagonal = halfSide*sqrt(2).
-      // Simpler: scale linearly with old startSize/startDist ratio. That works.
-      newSize = clamp(newSize, 1, 100);
-      if (isText) {
-        state.positions[key].fontSize = +newSize.toFixed(1);
-        el.style.fontSize = newSize + 'cqw';
-      } else {
-        state.positions[key].size = +newSize.toFixed(1);
-        el.style.width = newSize + 'cqw';
-        if (key.startsWith('photo')) el.style.height = newSize + 'cqw';
-      }
+      const newDist = Math.hypot(mv.clientX-cx, mv.clientY-cy);
+      let newFS = clamp(newDist * scale, 1, 30);
+      state.positions[key].fontSize = +newFS.toFixed(1);
+      el.style.fontSize = newFS + 'cqw';
       renderElementControls();
     };
     const onUp = () => {
@@ -674,61 +719,54 @@ function attachResize(handle, el, key) {
 // =========================================================================
 
 function clamp(v,a,b){ return Math.max(a, Math.min(b, v)); }
-
-// Click on empty frame area = deselect
-$frame.addEventListener('pointerdown', (ev) => {
-  if (ev.target === $frame) {
-    state.selectedKey = null;
-    saveState();
-    render();
-  }
-});
-
-// =========================================================================
-// RIGHT SIDEBAR — Number-Inputs
-// =========================================================================
-
-const $elControls = document.getElementById('el-controls');
-
-/* Parse number with comma OR dot decimal separator (DE/EN locale) */
 function parseNum(str) {
   if (typeof str !== 'string') return NaN;
   return parseFloat(str.replace(',', '.'));
 }
 
+$frame.addEventListener('pointerdown', (ev) => {
+  if (ev.target === $frame) {
+    state.selectedKey = null;
+    saveState(); render();
+  }
+});
+
+// =========================================================================
+// RIGHT SIDEBAR — number inputs
+// =========================================================================
+
+const $elControls = document.getElementById('el-controls');
+
 function renderElementControls() {
   if (!state.selectedKey) {
-    $elControls.innerHTML = '<p class="hint">Klick ein Element auf der Matte an, um es hier zu editieren.</p>';
+    $elControls.innerHTML = '<p class="hint">Klick eine Cell auf der Decke an, um sie hier zu editieren.</p>';
     return;
   }
   const key = state.selectedKey;
   const pos = state.positions[key];
-  const isDeco = key.startsWith('deco_');
+  if (!pos) {
+    state.selectedKey = null;
+    $elControls.innerHTML = '';
+    return;
+  }
   const isPhoto = key.startsWith('photo');
-  const isText = key === 'hauptzeile' || key === 'untertitel';
+  const isText  = key === 'hauptzeile' || key === 'untertitel';
 
-  /* Mirror-Display für rechts/unten-Decos: zeigt Distanz zum gespiegelten
-   * Rand statt absolute %, damit symmetrische Positionen identische Zahlen
-   * haben. Z.B. TR.left=92 → angezeigt als right:8 (= TL.left=8). */
-  const isRight  = (key === 'deco_tr' || key === 'deco_br');
-  const isBottom = (key === 'deco_bl' || key === 'deco_br');
-  const horizLabel = isRight  ? 'right %' : 'left %';
-  const vertLabel  = isBottom ? 'bottom %' : 'top %';
-  const horizValue = isRight  ? +(100 - pos.left).toFixed(2) : pos.left;
-  const vertValue  = isBottom ? +(100 - pos.top).toFixed(2)  : pos.top;
-  const horizProp  = isRight  ? 'leftMirror' : 'left';
-  const vertProp   = isBottom ? 'topMirror'  : 'top';
-
-  /* type=text damit Komma akzeptiert wird (HTML5 number type ist locale-abhaengig) */
   let html = `<div class="el-control">
-    <div class="el-control-header"><strong>${ELEMENT_LABELS[key]}</strong><span class="badge">${key}</span></div>
+    <div class="el-control-header"><strong>${ELEMENT_LABELS[key] || key}</strong><span class="badge">${key}</span></div>
     <div class="row2">
-      <div><label>${vertLabel}</label><input type="text" inputmode="decimal" data-prop="${vertProp}" value="${vertValue}"></div>
-      <div><label>${horizLabel}</label><input type="text" inputmode="decimal" data-prop="${horizProp}" value="${horizValue}"></div>
+      <div><label>top %</label><input type="text" inputmode="decimal" data-prop="top" value="${pos.top}"></div>
+      <div><label>left %</label><input type="text" inputmode="decimal" data-prop="left" value="${pos.left}"></div>
     </div>`;
-  if (isPhoto || isDeco) html += `<label>Größe (cqw)</label><input type="text" inputmode="decimal" data-prop="size" value="${pos.size}">`;
-  if (isText) html += `<label>Font-Size (cqw)</label><input type="text" inputmode="decimal" data-prop="fontSize" value="${pos.fontSize}">`;
-  if (isDeco) html += `<label>Rotation (°)</label><input type="text" inputmode="decimal" data-prop="rotate" value="${pos.rotate}">`;
+  if (isPhoto) {
+    html += `<div class="row2">
+      <div><label>height %</label><input type="text" inputmode="decimal" data-prop="height" value="${pos.height}"></div>
+      <div><label>width %</label><input type="text" inputmode="decimal" data-prop="width" value="${pos.width}"></div>
+    </div>`;
+  }
+  if (isText) {
+    html += `<label>Font-Size (cqw)</label><input type="text" inputmode="decimal" data-prop="fontSize" value="${pos.fontSize}">`;
+  }
   html += `</div>`;
   $elControls.innerHTML = html;
 
@@ -737,21 +775,14 @@ function renderElementControls() {
       const prop = ev.target.dataset.prop;
       const val = parseNum(ev.target.value);
       if (isNaN(val)) return;
-      if (prop === 'leftMirror') {
-        state.positions[key].left = +(100 - val).toFixed(2);
-      } else if (prop === 'topMirror') {
-        state.positions[key].top  = +(100 - val).toFixed(2);
-      } else {
-        state.positions[key][prop] = val;
-      }
-      saveState();
-      render();
+      state.positions[key][prop] = val;
+      saveState(); render();
     });
   });
 }
 
 // =========================================================================
-// LEFT SIDEBAR pickers
+// PICKERS
 // =========================================================================
 
 function bindPicker(id, key, parser) {
@@ -759,20 +790,53 @@ function bindPicker(id, key, parser) {
     btn.addEventListener('click', () => {
       document.querySelectorAll(`#${id} button`).forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
-      state[key] = parser ? parser(btn.dataset[Object.keys(btn.dataset)[0]]) : btn.dataset[Object.keys(btn.dataset)[0]];
+      const dataKey = Object.keys(btn.dataset)[0];
+      state[key] = parser ? parser(btn.dataset[dataKey]) : btn.dataset[dataKey];
       saveState(); render();
     });
   });
 }
-bindPicker('variant-picker',     'variant');
-bindPicker('photo-count-picker', 'photoCount', v => parseInt(v,10));
-bindPicker('material-picker',    'material');
-bindPicker('size-picker',        'size');
-bindPicker('orientation-picker', 'orientation');
-bindPicker('font-hauptzeile-picker', 'fontHauptzeile');
-bindPicker('font-untertitel-picker', 'fontUntertitel');
 
-// Guides toggle
+/* Template-Picker — wechselt Template + setzt Photo-Defaults zurück */
+document.querySelectorAll('#template-picker button').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('#template-picker button').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    state.template = btn.dataset.template;
+    // Photo-Cells auf Template-Defaults zurücksetzen, Texte beibehalten
+    const newPos = buildPositionsForTemplate(state.template, state.orientation);
+    Object.assign(state.positions, newPos);
+    // Alte Photos die nicht mehr im neuen Template sind: löschen
+    Object.keys(state.positions).forEach(k => {
+      if (k.startsWith('photo')) {
+        const idx = parseInt(k.replace('photo',''), 10);
+        const cnt = TEMPLATE_DEFAULTS[state.template][state.orientation]?.length ||
+                    TEMPLATE_DEFAULTS[state.template].landscape.length;
+        if (idx > cnt) delete state.positions[k];
+      }
+    });
+    state.selectedKey = null;
+    saveState(); render();
+  });
+});
+
+/* Orientation-Wechsel: Photos auf Template-Defaults der neuen Orientation */
+document.querySelectorAll('#orientation-picker button').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('#orientation-picker button').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    state.orientation = btn.dataset.orientation;
+    const newPos = buildPositionsForTemplate(state.template, state.orientation);
+    Object.assign(state.positions, newPos);
+    saveState(); render();
+  });
+});
+
+bindPicker('size-picker',  'size');
+bindPicker('material-picker', 'material');
+bindPicker('radius-picker', 'photoRadius', v => parseFloat(v));
+bindPicker('font-hauptzeile-picker', 'fontHauptzeile');
+
 document.querySelectorAll('#guides-toggle button').forEach(btn => {
   btn.addEventListener('click', () => {
     document.querySelectorAll('#guides-toggle button').forEach(b => b.classList.remove('active'));
@@ -785,60 +849,13 @@ document.querySelectorAll('#guides-toggle button').forEach(btn => {
 document.getElementById('text-hauptzeile').addEventListener('input', (ev) => { state.hauptzeile = ev.target.value; saveState(); render(); });
 document.getElementById('text-untertitel').addEventListener('input', (ev) => { state.untertitel = ev.target.value; saveState(); render(); });
 
-// =========================================================================
-// SYMMETRY HELPERS
-// =========================================================================
-
-document.getElementById('sym-mirror-lr').addEventListener('click', () => {
-  // Spiegel TL → TR, BL → BR (left% → 100-left%, rotate → -rotate)
-  const tl = state.positions.deco_tl, bl = state.positions.deco_bl;
-  state.positions.deco_tr = { ...tl, left: 100 - tl.left, rotate: -tl.rotate };
-  state.positions.deco_br = { ...bl, left: 100 - bl.left, rotate: -bl.rotate };
-  saveState(); render();
-  toast('Rechte Decos von Links gespiegelt');
-});
-
-document.getElementById('sym-from-tl').addEventListener('click', () => {
-  // Alle 4 Ecken vom TL ableiten
-  const tl = state.positions.deco_tl;
-  state.positions.deco_tr = { ...tl, left: 100 - tl.left, rotate: -tl.rotate };
-  state.positions.deco_bl = { ...tl, top: 100 - tl.top };
-  state.positions.deco_br = { ...tl, left: 100 - tl.left, top: 100 - tl.top, rotate: -tl.rotate };
-  saveState(); render();
-  toast('4 Ecken vom TL abgeleitet');
-});
-
 document.getElementById('sym-photos').addEventListener('click', () => {
-  if (state.photoCount === 1) {
-    state.positions.photo1.left = 50;
-  } else if (state.photoCount === 2) {
-    state.positions.photo1.left = 30;
-    state.positions.photo2.left = 70;
-    state.positions.photo2.top = state.positions.photo1.top;
-    state.positions.photo2.size = state.positions.photo1.size;
-  } else if (state.photoCount === 3) {
-    state.positions.photo1.left = 22;
-    state.positions.photo2.left = 50;
-    state.positions.photo3.left = 78;
-    state.positions.photo2.top  = state.positions.photo1.top;
-    state.positions.photo3.top  = state.positions.photo1.top;
-    state.positions.photo2.size = state.positions.photo1.size;
-    state.positions.photo3.size = state.positions.photo1.size;
-  }
+  const newPos = buildPositionsForTemplate(state.template, state.orientation);
+  Object.assign(state.positions, newPos);
   saveState(); render();
-  toast('Fotos verteilt');
+  toast('Defaults wiederhergestellt');
 });
 
-// =========================================================================
-// RESET
-// =========================================================================
-
-document.getElementById('reset-positions').addEventListener('click', () => {
-  state.positions = makeDefaults(state.photoCount);
-  state.selectedKey = null;
-  saveState(); render();
-  toast('Positionen zurückgesetzt');
-});
 document.getElementById('reset-storage').addEventListener('click', () => {
   if (!confirm('Wirklich gesamten gespeicherten Stand löschen?')) return;
   localStorage.removeItem(STORAGE_KEY);
@@ -852,12 +869,12 @@ document.getElementById('reset-storage').addEventListener('click', () => {
 function buildJSON() {
   return JSON.stringify({
     product: 'foto-decke',
-    variant: state.variant,
-    photoCount: state.photoCount,
-    material: state.material,
+    template: state.template,
     size: state.size,
     orientation: state.orientation,
     aspect: +currentAspect().toFixed(4),
+    material: state.material,
+    photoRadius_cqw: state.photoRadius,
     texts: { hauptzeile: state.hauptzeile, untertitel: state.untertitel },
     fonts: { hauptzeile: state.fontHauptzeile, untertitel: state.fontUntertitel },
     positions: state.positions,
@@ -866,30 +883,21 @@ function buildJSON() {
 function buildCSS() {
   const p = state.positions;
   const lines = [];
-  lines.push(`/* Foto-Decke Positions-Tool Export — variant=${state.variant}, photoCount=${state.photoCount}, size=${state.size}, ${state.orientation} */`);
+  lines.push(`/* Foto-Decke Positions-Tool — template=${state.template}, ${state.size} ${state.orientation} */`);
   lines.push('');
-  lines.push(`.blanket-text__hauptzeile { top: ${p.hauptzeile.top}%; left: ${p.hauptzeile.left}%; font-size: ${p.hauptzeile.fontSize}cqw; }`);
-  lines.push(`.blanket-text__untertitel { top: ${p.untertitel.top}%; left: ${p.untertitel.left}%; font-size: ${p.untertitel.fontSize}cqw; }`);
-  for (let i = 1; i <= state.photoCount; i++) {
-    const k = 'photo' + i;
-    lines.push(`.blanket-photo[data-slot="${i}"] { top: ${p[k].top}%; left: ${p[k].left}%; width: ${p[k].size}cqw; height: ${p[k].size}cqw; }`);
-  }
-  if (VARIANT_DECO[state.variant]) {
-    ['tl','tr','bl','br'].forEach(c => {
-      const k = 'deco_' + c;
-      lines.push(`.blanket-decoration[data-corner="${c}"] { top: ${p[k].top}%; left: ${p[k].left}%; width: ${p[k].size}cqw; transform: translate(-50%,-50%) rotate(${p[k].rotate}deg); }`);
-    });
-  }
+  if (state.hauptzeile && p.hauptzeile) lines.push(`.blanket-text__hauptzeile { top: ${p.hauptzeile.top}%; left: ${p.hauptzeile.left}%; font-size: ${p.hauptzeile.fontSize}cqw; }`);
+  if (state.untertitel && p.untertitel) lines.push(`.blanket-text__untertitel { top: ${p.untertitel.top}%; left: ${p.untertitel.left}%; font-size: ${p.untertitel.fontSize}cqw; }`);
+  Object.keys(p).filter(k => k.startsWith('photo')).forEach(k => {
+    const idx = k.replace('photo','');
+    const c = p[k];
+    lines.push(`.blanket-photo[data-slot="${idx}"] { top: ${c.top}%; left: ${c.left}%; width: ${c.width}%; height: ${c.height}%; border-radius: ${state.photoRadius}cqw; }`);
+  });
   return lines.join('\n');
 }
 const $modal = document.getElementById('modal');
 const $modalTitle = document.getElementById('modal-title');
 const $modalText = document.getElementById('modal-text');
-function openModal(title, text) {
-  $modalTitle.textContent = title;
-  $modalText.value = text;
-  $modal.classList.add('open');
-}
+function openModal(title, text) { $modalTitle.textContent = title; $modalText.value = text; $modal.classList.add('open'); }
 function closeModal() { $modal.classList.remove('open'); }
 document.getElementById('export-json').addEventListener('click', () => openModal('JSON Export', buildJSON()));
 document.getElementById('export-css').addEventListener('click', () => openModal('CSS Export', buildCSS()));
@@ -920,20 +928,19 @@ function toast(msg) {
 
 loadState();
 
-function syncPicker(id, key, val) {
+function syncPicker(id, val) {
   document.querySelectorAll(`#${id} button`).forEach(b => {
     const dataKey = Object.keys(b.dataset)[0];
     b.classList.toggle('active', String(b.dataset[dataKey]) === String(val));
   });
 }
-syncPicker('variant-picker', 'variant', state.variant);
-syncPicker('photo-count-picker', 'count', state.photoCount);
-syncPicker('material-picker', 'material', state.material);
-syncPicker('size-picker', 'size', state.size);
-syncPicker('orientation-picker', 'orientation', state.orientation);
-syncPicker('font-hauptzeile-picker', 'font', state.fontHauptzeile);
-syncPicker('font-untertitel-picker', 'font', state.fontUntertitel);
-syncPicker('guides-toggle', 'guides', state.showGuides ? 'on' : 'off');
+syncPicker('template-picker', state.template);
+syncPicker('size-picker', state.size);
+syncPicker('orientation-picker', state.orientation);
+syncPicker('material-picker', state.material);
+syncPicker('radius-picker', state.photoRadius);
+syncPicker('font-hauptzeile-picker', state.fontHauptzeile);
+syncPicker('guides-toggle', state.showGuides ? 'on' : 'off');
 document.getElementById('text-hauptzeile').value = state.hauptzeile;
 document.getElementById('text-untertitel').value = state.untertitel;
 
