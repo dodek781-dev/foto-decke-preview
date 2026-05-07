@@ -22,12 +22,14 @@
  * cappen ohne Height proportional zu schrumpfen → verzerrtes Aspect). */
 .blanket-frame {
   --blanket-aspect: 1.4;            /* width/height — JS setzt pro Größe */
-  --frame-base: min(78vh, 680px);   /* feste Hoehe, viewport-responsive */
+  /* Desktop: 92% der Render-Area-Breite (= 100vw - Sidebar 445px),
+   * gespiegelt zu Mobile (92vw). Höhe gecapped auf 85vh. */
+  --frame-base: min(85vh, calc((100vw - 445px) * 0.92));
   position: relative;
   width:  var(--frame-base);
   height: calc(var(--frame-base) / var(--blanket-aspect));
-  max-width: 90vw;
-  max-height: 78vh;
+  max-width: calc(100vw - 445px - 40px);  /* Render-Area minus padding 20px×2 */
+  max-height: 85vh;
   background: #fafaf8;
   background-size: cover;
   background-position: center;
