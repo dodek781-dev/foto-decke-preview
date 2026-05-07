@@ -47,20 +47,22 @@
   .draggable.dragging{cursor:grabbing;z-index:10}
   .draggable.selected{outline:2px dashed #7c5aff;outline-offset:3px}
 
-  .el-hauptzeile{
-    color:#1a1a1a;font-family:'parlare',cursive;font-weight:400;
-    font-size:11cqw;line-height:1.05;letter-spacing:.01em;
+  .el-hauptzeile,.el-untertitel{
+    color:#1a1a1a;
+    line-height:1.05;letter-spacing:.01em;
     white-space:normal;text-align:center;max-width:90%;
     transform:translate(-50%,0);
     margin:0;padding:2px 6px;
   }
   .el-untertitel{
-    color:#1a1a1a;font-family:'Outfit',sans-serif;font-weight:500;
-    font-size:3.2cqw;line-height:1.4;letter-spacing:.08em;text-transform:uppercase;
-    white-space:normal;text-align:center;max-width:90%;
-    transform:translate(-50%,0);
-    margin:0;padding:2px 6px;
+    line-height:1.4;letter-spacing:.08em;text-transform:uppercase;
   }
+  /* Font-Style-Klassen — auf hauptzeile + untertitel jeweils anwendbar */
+  .font-script{font-family:'parlare',cursive;font-weight:400}
+  .font-serif{font-family:'Playfair Display',Georgia,serif;font-weight:700}
+  .font-sans{font-family:'Outfit',system-ui,sans-serif;font-weight:500}
+  .el-hauptzeile{font-size:11cqw}
+  .el-untertitel{font-size:3.2cqw}
   .blanket-frame[data-material="black"] .el-hauptzeile,
   .blanket-frame[data-material="black"] .el-untertitel{color:#fafafa}
 
@@ -144,6 +146,20 @@
     <input type="text" id="text-hauptzeile" value="Willkommen bei BALU">
     <label>Untertitel</label>
     <input type="text" id="text-untertitel" value="FAMILIE MÜLLER LEBT HIER AUCH...">
+
+    <h2>Schriftstil — Hauptzeile</h2>
+    <div class="ctrl-row" id="font-hauptzeile-picker">
+      <button data-font="script" class="active">Verspielt</button>
+      <button data-font="serif">Elegant</button>
+      <button data-font="sans">Modern</button>
+    </div>
+
+    <h2>Schriftstil — Untertitel</h2>
+    <div class="ctrl-row" id="font-untertitel-picker">
+      <button data-font="sans" class="active">Modern</button>
+      <button data-font="serif">Elegant</button>
+      <button data-font="script">Verspielt</button>
+    </div>
 
     <h2>Reset</h2>
     <div class="export-buttons">
@@ -255,6 +271,8 @@ const state = {
   size: '70x50',
   hauptzeile: 'Willkommen bei BALU',
   untertitel: 'FAMILIE MÜLLER LEBT HIER AUCH...',
+  fontHauptzeile: 'script',
+  fontUntertitel: 'sans',
   positions: makeDefaults(),
   selectedKey: null,
 };
@@ -297,9 +315,9 @@ function render() {
   $frame.innerHTML = '';
 
   // Hauptzeile
-  buildElement('hauptzeile', { tag: 'h2', class: 'el-hauptzeile draggable', text: state.hauptzeile });
+  buildElement('hauptzeile', { tag: 'h2', class: `el-hauptzeile font-${state.fontHauptzeile} draggable`, text: state.hauptzeile });
   // Untertitel
-  buildElement('untertitel', { tag: 'p', class: 'el-untertitel draggable', text: state.untertitel });
+  buildElement('untertitel', { tag: 'p', class: `el-untertitel font-${state.fontUntertitel} draggable`, text: state.untertitel });
 
   // Photos
   buildPhoto('photo1');
@@ -498,6 +516,22 @@ document.getElementById('text-hauptzeile').addEventListener('input', (ev) => {
 document.getElementById('text-untertitel').addEventListener('input', (ev) => {
   state.untertitel = ev.target.value; saveState(); render();
 });
+document.querySelectorAll('#font-hauptzeile-picker button').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('#font-hauptzeile-picker button').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    state.fontHauptzeile = btn.dataset.font;
+    saveState(); render();
+  });
+});
+document.querySelectorAll('#font-untertitel-picker button').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('#font-untertitel-picker button').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    state.fontUntertitel = btn.dataset.font;
+    saveState(); render();
+  });
+});
 
 document.getElementById('reset-positions').addEventListener('click', () => {
   state.positions = state.photoCount === 2 ? makeDefaults2Photo() : makeDefaults();
@@ -523,6 +557,7 @@ function buildJSON() {
     size: state.size,
     aspect: ASPECT[state.size],
     texts: { hauptzeile: state.hauptzeile, untertitel: state.untertitel },
+    fonts: { hauptzeile: state.fontHauptzeile, untertitel: state.fontUntertitel },
     positions: state.positions,
   }, null, 2);
 }
@@ -603,6 +638,10 @@ document.querySelectorAll(`#size-picker button[data-size="${state.size}"]`).forE
 document.querySelectorAll(`#size-picker button:not([data-size="${state.size}"])`).forEach(b => b.classList.remove('active'));
 document.getElementById('text-hauptzeile').value = state.hauptzeile;
 document.getElementById('text-untertitel').value = state.untertitel;
+document.querySelectorAll(`#font-hauptzeile-picker button[data-font="${state.fontHauptzeile}"]`).forEach(b => b.classList.add('active'));
+document.querySelectorAll(`#font-hauptzeile-picker button:not([data-font="${state.fontHauptzeile}"])`).forEach(b => b.classList.remove('active'));
+document.querySelectorAll(`#font-untertitel-picker button[data-font="${state.fontUntertitel}"]`).forEach(b => b.classList.add('active'));
+document.querySelectorAll(`#font-untertitel-picker button:not([data-font="${state.fontUntertitel}"])`).forEach(b => b.classList.remove('active'));
 
 render();
 </script>
