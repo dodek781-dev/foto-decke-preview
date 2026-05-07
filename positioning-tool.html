@@ -50,14 +50,14 @@
   .el-hauptzeile{
     color:#1a1a1a;font-family:'parlare',cursive;font-weight:400;
     font-size:11cqw;line-height:1.05;letter-spacing:.01em;
-    white-space:nowrap;text-align:center;
+    white-space:normal;text-align:center;max-width:90%;
     transform:translate(-50%,0);
     margin:0;padding:2px 6px;
   }
   .el-untertitel{
     color:#1a1a1a;font-family:'Outfit',sans-serif;font-weight:500;
     font-size:3.2cqw;line-height:1.4;letter-spacing:.08em;text-transform:uppercase;
-    white-space:nowrap;text-align:center;
+    white-space:normal;text-align:center;max-width:90%;
     transform:translate(-50%,0);
     margin:0;padding:2px 6px;
   }
@@ -283,6 +283,15 @@ function render() {
   // Frame attrs
   $frame.dataset.material = state.material;
   $frame.style.setProperty('--blanket-aspect', ASPECT[state.size]);
+
+  // Auto-distribute photos in 2-Foto-Mode wenn beide auf gleicher Position
+  if (state.photoCount === 2) {
+    const p1 = state.positions.photo1, p2 = state.positions.photo2;
+    if (p1.left === p2.left && p1.top === p2.top) {
+      state.positions.photo1.left = 30;
+      state.positions.photo2.left = 70;
+    }
+  }
 
   // Clear children
   $frame.innerHTML = '';
