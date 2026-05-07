@@ -1,0 +1,601 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Foto-Fußmatte Positions-Tool</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&family=Playfair+Display:wght@400;700;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://use.typekit.net/sgc6idq.css">
+<style>
+  *,*::before,*::after{box-sizing:border-box}
+  html,body{margin:0;padding:0;background:#1f1f23;color:#eaeaea;font-family:'Outfit',system-ui,sans-serif;min-height:100vh}
+  .app{display:grid;grid-template-columns:260px 1fr 320px;height:100vh;overflow:hidden}
+  aside{background:#2a2a30;padding:14px;overflow-y:auto;border-right:1px solid #3a3a42}
+  aside.right{border-right:none;border-left:1px solid #3a3a42}
+  aside h2{font-size:11px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:#9aa0aa;margin:14px 0 8px;border-bottom:1px solid #3a3a42;padding-bottom:6px}
+  aside h2:first-child{margin-top:0}
+  .ctrl-row{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px}
+  .ctrl-row button{flex:1;min-width:60px;padding:7px 6px;background:#3a3a42;color:#eaeaea;border:1px solid #4a4a55;border-radius:5px;cursor:pointer;font-size:12px;font-family:inherit}
+  .ctrl-row button.active{background:#7c5aff;border-color:#9678ff}
+  .ctrl-row button:hover:not(.active){background:#46464f}
+  label{display:block;font-size:11px;color:#9aa0aa;margin:8px 0 3px}
+  input[type="number"],input[type="text"]{width:100%;padding:6px 8px;background:#1f1f23;color:#eaeaea;border:1px solid #4a4a55;border-radius:4px;font-family:inherit;font-size:12px}
+  input[type="number"]:focus,input[type="text"]:focus{outline:none;border-color:#7c5aff}
+  textarea{width:100%;padding:8px;background:#1a1a1e;color:#eaeaea;border:1px solid #4a4a55;border-radius:4px;font-family:'JetBrains Mono','Menlo',monospace;font-size:11px;line-height:1.4;resize:vertical;min-height:120px}
+
+  .stage{display:flex;align-items:center;justify-content:center;background:#0e0e10;padding:20px;overflow:auto}
+  .blanket-frame{
+    --blanket-aspect:1.4;
+    position:relative;
+    width:min(80vh,720px);
+    aspect-ratio:var(--blanket-aspect);
+    max-width:calc(100vw - 600px);
+    background:#fafaf8 center/cover no-repeat;
+    border-radius:4px;
+    overflow:hidden;
+    box-shadow:0 22px 50px rgba(0,0,0,.5),0 10px 22px rgba(0,0,0,.3);
+    container-type:inline-size;
+  }
+  .blanket-frame[data-material="caramel"]{background-image:url('assets/textures/caramel.jpg')}
+  .blanket-frame[data-material="gray"]{background-image:url('assets/textures/gray.jpg')}
+  .blanket-frame[data-material="black"]{background-image:url('assets/textures/black.jpg')}
+
+  /* Draggable elements — alle absolute positioned */
+  .draggable{position:absolute;cursor:grab;user-select:none;touch-action:none}
+  .draggable.dragging{cursor:grabbing;z-index:10}
+  .draggable.selected{outline:2px dashed #7c5aff;outline-offset:3px}
+
+  .el-hauptzeile{
+    color:#1a1a1a;font-family:'parlare',cursive;font-weight:400;
+    font-size:11cqw;line-height:1.05;letter-spacing:.01em;
+    white-space:nowrap;text-align:center;
+    transform:translate(-50%,0);
+    margin:0;padding:2px 6px;
+  }
+  .el-untertitel{
+    color:#1a1a1a;font-family:'Outfit',sans-serif;font-weight:500;
+    font-size:3.2cqw;line-height:1.4;letter-spacing:.08em;text-transform:uppercase;
+    white-space:nowrap;text-align:center;
+    transform:translate(-50%,0);
+    margin:0;padding:2px 6px;
+  }
+  .blanket-frame[data-material="black"] .el-hauptzeile,
+  .blanket-frame[data-material="black"] .el-untertitel{color:#fafafa}
+
+  .el-photo{
+    border-radius:50%;overflow:hidden;
+    background:rgba(0,0,0,.05);
+    box-shadow:0 0 0 0.7cqw #000;
+    transform:translate(-50%,-50%);
+  }
+  .el-photo img{width:100%;height:100%;object-fit:cover;display:block;border-radius:50%}
+
+  .el-deco{
+    transform:translate(-50%,-50%) rotate(var(--rot,0deg));
+  }
+  .el-deco img{display:block;width:100%;height:auto;pointer-events:none}
+  .blanket-frame[data-material="black"] .el-deco img{filter:invert(1)}
+
+  /* Right sidebar element controls */
+  .el-control{padding:8px;background:#33333a;border:1px solid #4a4a55;border-radius:5px;margin-bottom:8px}
+  .el-control-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
+  .el-control-header strong{font-size:12px}
+  .el-control-header .badge{font-size:10px;color:#9aa0aa;font-family:monospace}
+  .row2{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+  .row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px}
+
+  .export-buttons{display:flex;flex-direction:column;gap:6px;margin-top:14px}
+  .export-buttons button{padding:9px;background:#7c5aff;color:#fff;border:none;border-radius:5px;cursor:pointer;font-family:inherit;font-size:12px;font-weight:600}
+  .export-buttons button:hover{background:#9678ff}
+  .export-buttons button.secondary{background:#3a3a42;color:#eaeaea}
+  .export-buttons button.secondary:hover{background:#46464f}
+
+  .modal{position:fixed;inset:0;background:rgba(0,0,0,.7);display:none;align-items:center;justify-content:center;z-index:100}
+  .modal.open{display:flex}
+  .modal-content{background:#2a2a30;padding:20px;border-radius:8px;width:90%;max-width:600px;max-height:80vh;overflow:auto}
+  .modal-content h3{margin:0 0 12px;font-size:14px}
+  .modal-content textarea{min-height:300px;font-size:12px}
+  .modal-actions{display:flex;gap:8px;margin-top:10px;justify-content:flex-end}
+  .modal-actions button{padding:8px 14px;background:#7c5aff;color:#fff;border:none;border-radius:4px;cursor:pointer;font-size:12px;font-weight:600}
+  .modal-actions button.secondary{background:#3a3a42}
+
+  .toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#7c5aff;color:#fff;padding:10px 18px;border-radius:6px;font-size:13px;font-weight:600;opacity:0;transition:opacity .2s;pointer-events:none;z-index:200}
+  .toast.show{opacity:1}
+
+  .hint{font-size:11px;color:#9aa0aa;line-height:1.4;margin-top:6px}
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- =========== LEFT SIDEBAR — global controls =========== -->
+  <aside class="left">
+    <h2>Variante</h2>
+    <div class="ctrl-row" id="variant-picker">
+      <button data-variant="mensch" class="active">Mensch</button>
+      <button data-variant="hund">Hund</button>
+      <button data-variant="katze">Katze</button>
+      <button data-variant="pferd">Pferd</button>
+    </div>
+
+    <h2>Foto-Anzahl</h2>
+    <div class="ctrl-row" id="photo-count-picker">
+      <button data-count="1" class="active">1 Foto</button>
+      <button data-count="2">2 Fotos</button>
+    </div>
+
+    <h2>Material</h2>
+    <div class="ctrl-row" id="material-picker">
+      <button data-material="caramel" class="active">Caramel</button>
+      <button data-material="gray">Grau</button>
+      <button data-material="black">Schwarz</button>
+    </div>
+
+    <h2>Größe</h2>
+    <div class="ctrl-row" id="size-picker">
+      <button data-size="70x50" class="active">70×50 (1.4)</button>
+      <button data-size="140x90">140×90 (1.56)</button>
+    </div>
+
+    <h2>Texte</h2>
+    <label>Hauptzeile</label>
+    <input type="text" id="text-hauptzeile" value="Willkommen bei BALU">
+    <label>Untertitel</label>
+    <input type="text" id="text-untertitel" value="FAMILIE MÜLLER LEBT HIER AUCH...">
+
+    <h2>Reset</h2>
+    <div class="export-buttons">
+      <button class="secondary" id="reset-positions">Positionen zurücksetzen</button>
+      <button class="secondary" id="reset-storage">localStorage löschen</button>
+    </div>
+
+    <p class="hint">Tipp: Element auf der Matte anklicken → rechts erscheinen seine Werte. Drag zum Verschieben.</p>
+  </aside>
+
+  <!-- =========== STAGE =========== -->
+  <div class="stage">
+    <div class="blanket-frame" id="frame" data-material="caramel"></div>
+  </div>
+
+  <!-- =========== RIGHT SIDEBAR — element controls + export =========== -->
+  <aside class="right">
+    <h2>Selektiertes Element</h2>
+    <div id="el-controls">
+      <p class="hint">Klick ein Element auf der Matte an, um es hier zu editieren.</p>
+    </div>
+
+    <h2>Export</h2>
+    <div class="export-buttons">
+      <button id="export-json">JSON anzeigen</button>
+      <button id="export-css">CSS anzeigen</button>
+    </div>
+    <p class="hint">JSON kannst du direkt in den Chat pasten — ich übernehme die Werte 1:1 in render.css.</p>
+  </aside>
+
+</div>
+
+<!-- ========= EXPORT MODAL ========= -->
+<div class="modal" id="modal">
+  <div class="modal-content">
+    <h3 id="modal-title">Export</h3>
+    <textarea id="modal-text" readonly></textarea>
+    <div class="modal-actions">
+      <button class="secondary" id="modal-close">Schließen</button>
+      <button id="modal-copy">In Zwischenablage</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+'use strict';
+
+// =========================================================================
+// CONFIG / DEFAULTS
+// =========================================================================
+
+const VARIANT_DECO = {
+  mensch: null,
+  hund:   'assets/decorations/pfote.png',
+  katze:  'assets/decorations/pfote.png',
+  pferd:  'assets/decorations/hufeisen.png',
+};
+
+const ASPECT = { '70x50': 1.4, '140x90': 140/90 };
+
+// Defaults — abgeleitet aus aktuellem render.css V1.8.6 Stand
+function makeDefaults() {
+  return {
+    hauptzeile: { top: 13, left: 50, fontSize: 11 },             // %, cqw
+    untertitel: { top: 86, left: 50, fontSize: 3.2 },
+    photo1:     { top: 50, left: 50, size: 40 },                 // % center, cqw
+    photo2:     { top: 50, left: 50, size: 40 },
+    deco_tl:    { top: 36, left: 22, size: 11, rotate: -15 },
+    deco_tr:    { top: 36, left: 78, size: 11, rotate: 15 },
+    deco_bl:    { top: 62, left:  8, size: 11, rotate: -15 },
+    deco_br:    { top: 62, left: 92, size: 11, rotate: 15 },
+  };
+}
+function makeDefaults2Photo() {
+  return {
+    hauptzeile: { top: 13, left: 50, fontSize: 11 },
+    untertitel: { top: 86, left: 50, fontSize: 3.2 },
+    photo1:     { top: 50, left: 30, size: 40 },
+    photo2:     { top: 50, left: 70, size: 40 },
+    deco_tl:    { top:  9, left:  6, size:  7, rotate: -15 },
+    deco_tr:    { top:  9, left: 94, size:  7, rotate: 15 },
+    deco_bl:    { top: 91, left:  6, size:  7, rotate: -15 },
+    deco_br:    { top: 91, left: 94, size:  7, rotate: 15 },
+  };
+}
+
+const DEFAULT_PHOTO = 'assets/photo-mockup-default.jpg';
+const ELEMENT_LABELS = {
+  hauptzeile: 'Hauptzeile',
+  untertitel: 'Untertitel',
+  photo1: 'Foto 1',
+  photo2: 'Foto 2',
+  deco_tl: 'Deko ↖ TL',
+  deco_tr: 'Deko ↗ TR',
+  deco_bl: 'Deko ↙ BL',
+  deco_br: 'Deko ↘ BR',
+};
+
+// =========================================================================
+// STATE
+// =========================================================================
+
+const state = {
+  variant: 'mensch',
+  photoCount: 1,
+  material: 'caramel',
+  size: '70x50',
+  hauptzeile: 'Willkommen bei BALU',
+  untertitel: 'FAMILIE MÜLLER LEBT HIER AUCH...',
+  positions: makeDefaults(),
+  selectedKey: null,
+};
+
+const STORAGE_KEY = 'foto-decke-positioning-tool-v1';
+
+function loadState() {
+  try {
+    const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || 'null');
+    if (saved && saved.version === 1) {
+      Object.assign(state, saved.state);
+    }
+  } catch(e){}
+}
+function saveState() {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify({ version: 1, state }));
+}
+
+// =========================================================================
+// RENDER
+// =========================================================================
+
+const $frame = document.getElementById('frame');
+
+function render() {
+  // Frame attrs
+  $frame.dataset.material = state.material;
+  $frame.style.setProperty('--blanket-aspect', ASPECT[state.size]);
+
+  // Clear children
+  $frame.innerHTML = '';
+
+  // Hauptzeile
+  buildElement('hauptzeile', { tag: 'h2', class: 'el-hauptzeile draggable', text: state.hauptzeile });
+  // Untertitel
+  buildElement('untertitel', { tag: 'p', class: 'el-untertitel draggable', text: state.untertitel });
+
+  // Photos
+  buildPhoto('photo1');
+  if (state.photoCount === 2) buildPhoto('photo2');
+
+  // Decorations (only if variant has deco)
+  if (VARIANT_DECO[state.variant]) {
+    ['deco_tl','deco_tr','deco_bl','deco_br'].forEach(k => buildDeco(k));
+  }
+
+  renderElementControls();
+}
+
+function buildElement(key, opts) {
+  const pos = state.positions[key];
+  const el = document.createElement(opts.tag);
+  el.className = opts.class;
+  el.dataset.key = key;
+  el.textContent = opts.text;
+  el.style.top  = pos.top + '%';
+  el.style.left = pos.left + '%';
+  if (pos.fontSize) el.style.fontSize = pos.fontSize + 'cqw';
+  if (state.selectedKey === key) el.classList.add('selected');
+  attachDrag(el, key);
+  $frame.appendChild(el);
+}
+
+function buildPhoto(key) {
+  const pos = state.positions[key];
+  const wrap = document.createElement('div');
+  wrap.className = 'el-photo draggable';
+  wrap.dataset.key = key;
+  wrap.style.top  = pos.top + '%';
+  wrap.style.left = pos.left + '%';
+  wrap.style.width  = pos.size + 'cqw';
+  wrap.style.height = pos.size + 'cqw';
+  if (state.selectedKey === key) wrap.classList.add('selected');
+  const img = document.createElement('img');
+  img.src = DEFAULT_PHOTO;
+  img.alt = '';
+  wrap.appendChild(img);
+  attachDrag(wrap, key);
+  $frame.appendChild(wrap);
+}
+
+function buildDeco(key) {
+  const pos = state.positions[key];
+  const wrap = document.createElement('div');
+  wrap.className = 'el-deco draggable';
+  wrap.dataset.key = key;
+  wrap.style.top  = pos.top + '%';
+  wrap.style.left = pos.left + '%';
+  wrap.style.width = pos.size + 'cqw';
+  wrap.style.setProperty('--rot', pos.rotate + 'deg');
+  if (state.selectedKey === key) wrap.classList.add('selected');
+  const img = document.createElement('img');
+  img.src = VARIANT_DECO[state.variant];
+  img.alt = '';
+  wrap.appendChild(img);
+  attachDrag(wrap, key);
+  $frame.appendChild(wrap);
+}
+
+// =========================================================================
+// DRAG
+// =========================================================================
+
+function attachDrag(el, key) {
+  el.addEventListener('pointerdown', (ev) => {
+    ev.preventDefault();
+    state.selectedKey = key;
+    el.setPointerCapture(ev.pointerId);
+    el.classList.add('dragging');
+    const frameRect = $frame.getBoundingClientRect();
+    const startX = ev.clientX, startY = ev.clientY;
+    const startPos = { ...state.positions[key] };
+
+    const onMove = (mv) => {
+      const dx = mv.clientX - startX;
+      const dy = mv.clientY - startY;
+      const dxPct = (dx / frameRect.width) * 100;
+      const dyPct = (dy / frameRect.height) * 100;
+      const newLeft = clamp(startPos.left + dxPct, 0, 100);
+      const newTop  = clamp(startPos.top  + dyPct, 0, 100);
+      state.positions[key].left = +newLeft.toFixed(2);
+      state.positions[key].top  = +newTop.toFixed(2);
+      el.style.left = newLeft + '%';
+      el.style.top  = newTop  + '%';
+      renderElementControls(); // live-update sidebar inputs
+    };
+    const onUp = () => {
+      el.classList.remove('dragging');
+      document.removeEventListener('pointermove', onMove);
+      document.removeEventListener('pointerup', onUp);
+      saveState();
+      // Re-render to apply selected highlight
+      render();
+    };
+    document.addEventListener('pointermove', onMove);
+    document.addEventListener('pointerup', onUp);
+
+    // re-render now to highlight
+    render();
+  });
+}
+
+function clamp(v,a,b){ return Math.max(a, Math.min(b, v)); }
+
+// =========================================================================
+// RIGHT SIDEBAR — element controls
+// =========================================================================
+
+const $elControls = document.getElementById('el-controls');
+
+function renderElementControls() {
+  if (!state.selectedKey) {
+    $elControls.innerHTML = '<p class="hint">Klick ein Element auf der Matte an, um es hier zu editieren.</p>';
+    return;
+  }
+  const key = state.selectedKey;
+  const pos = state.positions[key];
+  const isDeco = key.startsWith('deco_');
+  const isPhoto = key.startsWith('photo');
+  const isText = key === 'hauptzeile' || key === 'untertitel';
+
+  let html = `<div class="el-control">
+    <div class="el-control-header"><strong>${ELEMENT_LABELS[key]}</strong><span class="badge">${key}</span></div>
+    <div class="row2">
+      <div><label>top %</label><input type="number" step="0.1" data-prop="top" value="${pos.top}"></div>
+      <div><label>left %</label><input type="number" step="0.1" data-prop="left" value="${pos.left}"></div>
+    </div>`;
+  if (isPhoto || isDeco) {
+    html += `<label>Größe (cqw)</label><input type="number" step="0.5" data-prop="size" value="${pos.size}">`;
+  }
+  if (isText) {
+    html += `<label>Font-Size (cqw)</label><input type="number" step="0.5" data-prop="fontSize" value="${pos.fontSize}">`;
+  }
+  if (isDeco) {
+    html += `<label>Rotation (°)</label><input type="number" step="1" data-prop="rotate" value="${pos.rotate}">`;
+  }
+  html += `</div>`;
+  $elControls.innerHTML = html;
+
+  $elControls.querySelectorAll('input[data-prop]').forEach(inp => {
+    inp.addEventListener('input', (ev) => {
+      const prop = ev.target.dataset.prop;
+      const val = parseFloat(ev.target.value);
+      if (isNaN(val)) return;
+      state.positions[key][prop] = val;
+      saveState();
+      render();
+    });
+  });
+}
+
+// =========================================================================
+// LEFT SIDEBAR — picker bindings
+// =========================================================================
+
+document.querySelectorAll('#variant-picker button').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('#variant-picker button').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    state.variant = btn.dataset.variant;
+    saveState(); render();
+  });
+});
+document.querySelectorAll('#photo-count-picker button').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('#photo-count-picker button').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    state.photoCount = parseInt(btn.dataset.count, 10);
+    // Beim Wechsel auf 2-Foto: lade die 2-Foto-Defaults wenn Positionen noch unverändert
+    saveState(); render();
+  });
+});
+document.querySelectorAll('#material-picker button').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('#material-picker button').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    state.material = btn.dataset.material;
+    saveState(); render();
+  });
+});
+document.querySelectorAll('#size-picker button').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('#size-picker button').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    state.size = btn.dataset.size;
+    saveState(); render();
+  });
+});
+document.getElementById('text-hauptzeile').addEventListener('input', (ev) => {
+  state.hauptzeile = ev.target.value; saveState(); render();
+});
+document.getElementById('text-untertitel').addEventListener('input', (ev) => {
+  state.untertitel = ev.target.value; saveState(); render();
+});
+
+document.getElementById('reset-positions').addEventListener('click', () => {
+  state.positions = state.photoCount === 2 ? makeDefaults2Photo() : makeDefaults();
+  state.selectedKey = null;
+  saveState(); render();
+  toast('Positionen zurückgesetzt');
+});
+document.getElementById('reset-storage').addEventListener('click', () => {
+  if (!confirm('Wirklich gesamten gespeicherten Stand löschen?')) return;
+  localStorage.removeItem(STORAGE_KEY);
+  location.reload();
+});
+
+// =========================================================================
+// EXPORT
+// =========================================================================
+
+function buildJSON() {
+  return JSON.stringify({
+    variant: state.variant,
+    photoCount: state.photoCount,
+    material: state.material,
+    size: state.size,
+    aspect: ASPECT[state.size],
+    texts: { hauptzeile: state.hauptzeile, untertitel: state.untertitel },
+    positions: state.positions,
+  }, null, 2);
+}
+
+function buildCSS() {
+  const p = state.positions;
+  const lines = [];
+  lines.push(`/* Foto-Fußmatte Positions-Tool Export — variant=${state.variant}, photoCount=${state.photoCount}, size=${state.size} */`);
+  lines.push('');
+  lines.push(`.blanket-text__hauptzeile { top: ${p.hauptzeile.top}%; left: ${p.hauptzeile.left}%; font-size: ${p.hauptzeile.fontSize}cqw; }`);
+  lines.push(`.blanket-text__untertitel { top: ${p.untertitel.top}%; left: ${p.untertitel.left}%; font-size: ${p.untertitel.fontSize}cqw; }`);
+  lines.push(`.blanket-photo[data-slot="1"] { top: ${p.photo1.top}%; left: ${p.photo1.left}%; width: ${p.photo1.size}cqw; height: ${p.photo1.size}cqw; }`);
+  if (state.photoCount === 2) {
+    lines.push(`.blanket-photo[data-slot="2"] { top: ${p.photo2.top}%; left: ${p.photo2.left}%; width: ${p.photo2.size}cqw; height: ${p.photo2.size}cqw; }`);
+  }
+  if (VARIANT_DECO[state.variant]) {
+    ['tl','tr','bl','br'].forEach(c => {
+      const k = 'deco_' + c;
+      lines.push(`.blanket-decoration[data-corner="${c}"] { top: ${p[k].top}%; left: ${p[k].left}%; width: ${p[k].size}cqw; transform: translate(-50%,-50%) rotate(${p[k].rotate}deg); }`);
+    });
+  }
+  return lines.join('\n');
+}
+
+const $modal = document.getElementById('modal');
+const $modalTitle = document.getElementById('modal-title');
+const $modalText = document.getElementById('modal-text');
+
+function openModal(title, text) {
+  $modalTitle.textContent = title;
+  $modalText.value = text;
+  $modal.classList.add('open');
+}
+function closeModal() { $modal.classList.remove('open'); }
+
+document.getElementById('export-json').addEventListener('click', () => openModal('JSON Export', buildJSON()));
+document.getElementById('export-css').addEventListener('click', () => openModal('CSS Export', buildCSS()));
+document.getElementById('modal-close').addEventListener('click', closeModal);
+document.getElementById('modal-copy').addEventListener('click', async () => {
+  try {
+    await navigator.clipboard.writeText($modalText.value);
+    toast('In Zwischenablage kopiert');
+  } catch(e){
+    $modalText.select();
+    document.execCommand('copy');
+    toast('Kopiert (Fallback)');
+  }
+});
+$modal.addEventListener('click', (ev) => { if (ev.target === $modal) closeModal(); });
+document.addEventListener('keydown', (ev) => { if (ev.key === 'Escape') closeModal(); });
+
+// =========================================================================
+// TOAST
+// =========================================================================
+const $toast = document.getElementById('toast');
+let toastTimer = null;
+function toast(msg) {
+  $toast.textContent = msg;
+  $toast.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => $toast.classList.remove('show'), 1800);
+}
+
+// =========================================================================
+// INIT
+// =========================================================================
+
+loadState();
+
+// Sync pickers to loaded state
+document.querySelectorAll(`#variant-picker button[data-variant="${state.variant}"]`).forEach(b => b.classList.add('active'));
+document.querySelectorAll(`#variant-picker button:not([data-variant="${state.variant}"])`).forEach(b => b.classList.remove('active'));
+document.querySelectorAll(`#photo-count-picker button[data-count="${state.photoCount}"]`).forEach(b => b.classList.add('active'));
+document.querySelectorAll(`#photo-count-picker button:not([data-count="${state.photoCount}"])`).forEach(b => b.classList.remove('active'));
+document.querySelectorAll(`#material-picker button[data-material="${state.material}"]`).forEach(b => b.classList.add('active'));
+document.querySelectorAll(`#material-picker button:not([data-material="${state.material}"])`).forEach(b => b.classList.remove('active'));
+document.querySelectorAll(`#size-picker button[data-size="${state.size}"]`).forEach(b => b.classList.add('active'));
+document.querySelectorAll(`#size-picker button:not([data-size="${state.size}"])`).forEach(b => b.classList.remove('active'));
+document.getElementById('text-hauptzeile').value = state.hauptzeile;
+document.getElementById('text-untertitel').value = state.untertitel;
+
+render();
+</script>
+</body>
+</html>
