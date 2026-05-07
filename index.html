@@ -14,9 +14,9 @@
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Playfair+Display:wght@400;700;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://use.typekit.net/sgc6idq.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.css">
-  <link rel="stylesheet" href="css/base.css?v=47">
-  <link rel="stylesheet" href="css/editor.css?v=47">
-  <link rel="stylesheet" href="css/render.css?v=47">
+  <link rel="stylesheet" href="css/base.css?v=48">
+  <link rel="stylesheet" href="css/editor.css?v=48">
+  <link rel="stylesheet" href="css/render.css?v=48">
 </head>
 <body>
   <header class="preview-topbar" aria-hidden="true">
@@ -185,10 +185,32 @@
       <!-- ============================================ -->
       <div class="text__wrapper" style="display:none;">
 
-        <div class="elem__picker">
+        <!-- Mensch-Variante: freier Hauptzeile-Input + Quick-Templates -->
+        <div class="elem__picker" data-variant-mode="mensch">
           <p>Hauptzeile</p>
           <input type="text" id="input-hauptzeile" maxlength="60" placeholder="z.B. Willkommen, Hello, Familie Müller">
           <div class="hauptzeile-templates" id="hauptzeile-templates"></div>
+        </div>
+
+        <!-- Tier-Variante: separater Tiername + Überschrift-Dropdown (PetPrinted-Pattern) -->
+        <div class="elem__picker" data-variant-mode="animal" style="display:none;">
+          <p id="label-animal-name">Tiername</p>
+          <input type="text" id="input-animal-name" maxlength="15" placeholder="Name eingeben …">
+          <p class="input-hint">Bis zu 15 Zeichen möglich</p>
+        </div>
+        <div class="elem__picker" data-variant-mode="animal" style="display:none;">
+          <p>Überschrift</p>
+          <select id="hauptzeile-template-select" class="hauptzeile-select"></select>
+        </div>
+
+        <!-- Deko-Toggle (nur Tier-Variante) -->
+        <div class="elem__picker" data-variant-decoration="true" style="display:none;">
+          <p id="label-decoration-toggle">Pfoten</p>
+          <label class="deco-toggle">
+            <input type="checkbox" id="decoration-toggle" checked>
+            <span class="deco-toggle-track"></span>
+            <span class="deco-toggle-label" id="decoration-toggle-label">Pfoten anzeigen/ausblenden</span>
+          </label>
         </div>
 
         <div class="elem__picker">
@@ -300,6 +322,6 @@
   </div>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.js"></script>
-  <script type="module" src="js/main.js?v=47"></script>
+  <script type="module" src="js/main.js?v=48"></script>
 </body>
 </html>
