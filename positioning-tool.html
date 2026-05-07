@@ -134,10 +134,12 @@
   .blanket-frame[data-material="black"] .el-untertitel{color:#fafafa}
 
   .el-photo{
-    border-radius:50%;overflow:hidden;
+    border-radius:50%;
     background:rgba(0,0,0,.05);
     box-shadow:0 0 0 0.7cqw #000;
     transform:translate(-50%,-50%);
+    /* overflow:visible damit Handles und Badge sichtbar sind.
+     * Kreis-Form kommt vom border-radius:50% am img. */
   }
   .el-photo img{width:100%;height:100%;object-fit:cover;display:block;border-radius:50%}
   .el-photo .pos-badge{transform:translate(-50%,0);left:50%}
