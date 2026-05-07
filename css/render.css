@@ -96,6 +96,25 @@
   color: #fafafa;
 }
 
+/* Eck-Deko (V1.8) — Pfoten/Hufeisen in den 4 Ecken der Matte.
+ * Nur sichtbar wenn variant.decoration_png gesetzt ist. */
+.blanket-decoration {
+  position: absolute;
+  width: 12cqw;
+  height: auto;
+  pointer-events: none;
+  user-select: none;
+  z-index: 1;
+}
+.blanket-decoration[data-corner="tl"] { top: 4cqw; left: 4cqw; }
+.blanket-decoration[data-corner="tr"] { top: 4cqw; right: 4cqw; }
+.blanket-decoration[data-corner="bl"] { bottom: 4cqw; left: 4cqw; }
+.blanket-decoration[data-corner="br"] { bottom: 4cqw; right: 4cqw; }
+/* Schwarzes Material → weiße Deko (Filter invert) */
+.render-area[data-material="black"] .blanket-decoration {
+  filter: invert(1);
+}
+
 /* Foto-Slots (Kreis-Form, Sternkarte-Pattern). V1.7.2 mit !important
  * gegen Layout-Engine-Auto-Sizing. V1.7.11: schwarzer Ring um die Photos
  * (Pet-Printed-Style) via box-shadow — kein Layout-Impact. */

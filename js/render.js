@@ -1,12 +1,36 @@
-/* Reaktives Rendering — V1.7 mit 2-Slot-Foto-Support + kreisförmigen Slots. */
+/* Reaktives Rendering — V1.8 mit Variant-Deko (Pfoten/Hufeisen in 4 Ecken). */
 
 import { state, subscribe, currentAspect, FONT_STYLES } from './state.js';
+import { variant } from './variants/index.js';
 
 const $renderArea = document.querySelector('.render-area');
 const $frame = document.querySelector('.blanket-frame');
 const $hauptzeile = document.querySelector('.blanket-text__hauptzeile');
 const $untertitel = document.querySelector('.blanket-text__untertitel');
 const $textBlock = document.querySelector('.blanket-text');
+
+const DECORATION_CORNERS = ['tl', 'tr', 'bl', 'br'];
+
+function ensureDecorationCorners() {
+  if (!variant.decoration_png) return;
+  DECORATION_CORNERS.forEach(corner => {
+    let el = $frame.querySelector(`.blanket-decoration[data-corner="${corner}"]`);
+    if (!el) {
+      el = document.createElement('img');
+      el.className = 'blanket-decoration';
+      el.dataset.corner = corner;
+      el.src = variant.decoration_png;
+      el.alt = '';
+      $frame.appendChild(el);
+    }
+  });
+}
+
+function updateDecorationVisibility(visible) {
+  $frame.querySelectorAll('.blanket-decoration').forEach(el => {
+    el.style.display = visible ? '' : 'none';
+  });
+}
 
 function ensurePhotoSlot(slotIndex) {
   let el = $frame.querySelector(`.blanket-photo[data-slot="${slotIndex}"]`);
@@ -38,11 +62,16 @@ function setSlotImage(el, url) {
 
 function render(s) {
   $renderArea.dataset.material = s.material;
+  $renderArea.dataset.variant = variant.variant_name;
 
   // Aspect-Ratio
   if ($frame) {
     $frame.style.setProperty('--blanket-aspect', String(currentAspect(s)));
   }
+
+  // Eck-Deko (1× erstellen, dann nur ein-/ausblenden)
+  ensureDecorationCorners();
+  updateDecorationVisibility(s.decoration_visible);
 
   // Foto-Anzahl als data-attribute (CSS-Hook für 1- vs 2-Foto-Layout)
   $renderArea.dataset.photoCount = String(s.photo_count || 1);

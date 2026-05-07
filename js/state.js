@@ -1,11 +1,14 @@
 /* Reaktiver State für Personalisierte-Fußmatte-Editor.
- * V1.7: Optional 2 Fotos nebeneinander + kreisförmiger Cropper. */
+ * V1.8: Multi-Variant (mensch/hund/katze/pferd) — Defaults aus variants/. */
 
-/* Default-Mockup — Pattern wie Distantlines Foto-Poster / Citymap / Starmap.
- * 1:1 Kopie aus distantlines/assets/photo-mockup-default.jpg (1000×1500 px,
- * Familienfoto). Bei Page-Load sofort sichtbar; sobald User eigenes Foto
- * hochlädt, wird es ersetzt. */
+import { variant } from './variants/index.js';
+
 const DEFAULT_PHOTO = 'assets/photo-mockup-default.jpg';
+
+/* Hauptzeile-Default: bei Tier-Variante "Willkommen bei BALU", sonst frei. */
+const initialHauptzeile = (variant.hauptzeile_input_mode === 'animal_name')
+  ? `${variant.default_hauptzeile_template} ${variant.default_animal_name}`
+  : variant.default_hauptzeile;
 
 export const state = {
   // Foto 1 (immer da)
@@ -32,12 +35,17 @@ export const state = {
   // Material
   material: 'caramel',
 
-  // Text
-  hauptzeile: 'Willkommen',
-  untertitel: 'BEI FAMILIE MÜLLER',
+  // Text — Defaults variant-abhängig
+  hauptzeile: initialHauptzeile,
+  untertitel: variant.default_untertitel,
   text_font_style: 'script',
+  hauptzeile_template: variant.default_hauptzeile_template || null,
+  animal_name: variant.default_animal_name || '',
 
-  // Größe & Variant
+  // Deko: standardmäßig sichtbar wenn Variante eine PNG hat
+  decoration_visible: !!variant.decoration_png,
+
+  // Größe & Variant-Type
   size: '70x50',
   variant: 'standard',
 };
