@@ -96,20 +96,23 @@
   color: #fafafa;
 }
 
-/* Eck-Deko (V1.8) — Pfoten/Hufeisen in den 4 Ecken der Matte.
- * Nur sichtbar wenn variant.decoration_png gesetzt ist. */
+/* Tier-Deko (V1.8) — Pfoten/Hufeisen flankieren das Foto wie Tier-Spuren.
+ * Pattern aus User-Screenshot 12:59:10: 2 links + 2 rechts vom Foto, leicht
+ * versetzt. NICHT in den Matten-Ecken (das wirkt wie Cookie-Cutter). */
 .blanket-decoration {
   position: absolute;
-  width: 12cqw;
+  width: 8cqw;
   height: auto;
   pointer-events: none;
   user-select: none;
   z-index: 1;
 }
-.blanket-decoration[data-corner="tl"] { top: 4cqw; left: 4cqw; }
-.blanket-decoration[data-corner="tr"] { top: 4cqw; right: 4cqw; }
-.blanket-decoration[data-corner="bl"] { bottom: 4cqw; left: 4cqw; }
-.blanket-decoration[data-corner="br"] { bottom: 4cqw; right: 4cqw; }
+/* Linke Seite — 2 Pfoten gestaffelt, leicht nach rechts/innen geneigt */
+.blanket-decoration[data-corner="tl"] { top: 38%; left: 12%; transform: rotate(-12deg); }
+.blanket-decoration[data-corner="bl"] { top: 60%; left: 5%;  transform: rotate(12deg); }
+/* Rechte Seite — gespiegelt */
+.blanket-decoration[data-corner="tr"] { top: 38%; right: 12%; transform: rotate(12deg) scaleX(-1); }
+.blanket-decoration[data-corner="br"] { top: 60%; right: 5%;  transform: rotate(-12deg) scaleX(-1); }
 /* Schwarzes Material → weiße Deko (Filter invert) */
 .render-area[data-material="black"] .blanket-decoration {
   filter: invert(1);
