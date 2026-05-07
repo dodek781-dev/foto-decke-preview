@@ -116,6 +116,25 @@
 /* Rechte Seite: top tilts RIGHT (clockwise, weg vom Foto) */
 .blanket-decoration[data-corner="tr"] { top: 36%; right: 22%; transform: rotate(15deg); }
 .blanket-decoration[data-corner="br"] { top: 62%; right:  8%; transform: rotate(15deg); }
+
+/* 2-Foto-Mode: Pfoten in die 4 Matten-Ecken (Pattern aus User-Screenshot
+ * 11:53:39 mit BALU & JACKY). 1-Foto-Walking-Pattern wuerde mit den 2
+ * Photos kollidieren — daher hier komplettes Override. */
+.render-area[data-photo-count="2"] .blanket-decoration {
+  width: 9cqw;
+}
+.render-area[data-photo-count="2"] .blanket-decoration[data-corner="tl"] {
+  top: 4cqw; left: 4cqw;
+}
+.render-area[data-photo-count="2"] .blanket-decoration[data-corner="tr"] {
+  top: 4cqw; right: 4cqw;
+}
+.render-area[data-photo-count="2"] .blanket-decoration[data-corner="bl"] {
+  top: auto; bottom: 4cqw; left: 4cqw;
+}
+.render-area[data-photo-count="2"] .blanket-decoration[data-corner="br"] {
+  top: auto; bottom: 4cqw; right: 4cqw;
+}
 /* Schwarzes Material → weiße Deko (Filter invert) */
 .render-area[data-material="black"] .blanket-decoration {
   filter: invert(1);
