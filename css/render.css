@@ -119,21 +119,23 @@
 
 /* 2-Foto-Mode: Pfoten in die 4 Matten-Ecken (Pattern aus User-Screenshot
  * 11:53:39 mit BALU & JACKY). 1-Foto-Walking-Pattern wuerde mit den 2
- * Photos kollidieren — daher hier komplettes Override. */
+ * Photos kollidieren — daher hier komplettes Override.
+ * Photos sind 40cqw wide × 2 = 80cqw zentriert, lassen ~10cqw je Seite
+ * frei → Pfoten 7cqw bei 2cqw Inset passen ohne Overlap. */
 .render-area[data-photo-count="2"] .blanket-decoration {
-  width: 9cqw;
+  width: 7cqw;
 }
 .render-area[data-photo-count="2"] .blanket-decoration[data-corner="tl"] {
-  top: 4cqw; left: 4cqw;
+  top: 2cqw; left: 2cqw;
 }
 .render-area[data-photo-count="2"] .blanket-decoration[data-corner="tr"] {
-  top: 4cqw; right: 4cqw;
+  top: 2cqw; right: 2cqw;
 }
 .render-area[data-photo-count="2"] .blanket-decoration[data-corner="bl"] {
-  top: auto; bottom: 4cqw; left: 4cqw;
+  top: auto; bottom: 2cqw; left: 2cqw;
 }
 .render-area[data-photo-count="2"] .blanket-decoration[data-corner="br"] {
-  top: auto; bottom: 4cqw; right: 4cqw;
+  top: auto; bottom: 2cqw; right: 2cqw;
 }
 /* Schwarzes Material → weiße Deko (Filter invert) */
 .render-area[data-material="black"] .blanket-decoration {
